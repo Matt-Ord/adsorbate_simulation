@@ -1,24 +1,26 @@
 [tool.poetry]
-name = "slate"
+name = "adsorbate_simulation"
 version = "0.0.1"
 description = "A Framework for Automatic Basis Transformations"
 authors = ["Matthew Ord <mo433@cam.ac.uk>"]
 readme = "README.md"
-packages = [{ include = "slate" }]
+packages = [{ include = "adsorbate_simulation" }]
 
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "0fe6a87" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
 pytest = "^8.3.3"
 pyright = "^1.1.386"
 sphinx = "^8.1.3"
+pydata-sphinx-theme = "^0.16.0"
 
 [tool.poetry.extras]
-plot = ["matplotlib"]
+plot = ["matplotlib", "slate"]
 
 [tool.ruff]
 unsafe-fixes = true
