@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from slate.array.array import SlateArray
 from slate.linalg import eig, eigvals
 
