@@ -41,7 +41,7 @@
 				"python.analysis.diagnosticMode": "workspace",
 				"python.analysis.typeCheckingMode": "strict",
 				"python.analysis.include": [
-					"slate"
+					"adsorbate_simulation"
 				],
 				"python.analysis.autoImportCompletions": true,
 				"cSpell.allowCompoundWords": true,
