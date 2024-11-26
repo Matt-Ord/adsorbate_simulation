@@ -10,7 +10,9 @@ packages = [{ include = "adsorbate_simulation" }]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
-slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "0fe6a87" }
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "bd61dd2" }
+slate_quantum = { git = "https://github.com/Matt-Ord/slate_quantum.git", rev = "3c99b35" }
+scipy = "^1.14.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -31,7 +33,6 @@ preview = true
 ignore = [
     "COM812",
     "E501",
-    "ANN101",
     "S101",
     "PT009",
     "D100",
@@ -70,6 +71,11 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+include = ["tests", "adsorbate_simulation", "examples"]
+reportImplicitOverride = true
 
 [build-system]
 requires = ["poetry-core"]
