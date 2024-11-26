@@ -1110,8 +1110,8 @@ plot = ["matplotlib (>=3.9.2,<4.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/slate.git"
-reference = "bd61dd2"
-resolved_reference = "bd61dd2439b280c47d06628af216a77025c33b46"
+reference = "3864bf1"
+resolved_reference = "3864bf114b17b91557654290eb47b27f72e617f9"
 
 [[package]]
 name = "slate-quantum"
@@ -1127,7 +1127,7 @@ numpy = "^2.0.0"
 scipy = "^1.14.1"
 
 [package.extras]
-plot = ["matplotlib (>=3.9.2,<4.0.0)", "slate @ git+https://github.com/Matt-Ord/slate.git@bd61dd2"]
+plot = ["matplotlib (>=3.9.2,<4.0.0)", "slate @ git+https://github.com/Matt-Ord/slate.git@f312f08"]
 qutip = ["qutip (>=5.0.0,<6.0.0)"]
 simulation = ["qutip (>=5.0.0,<6.0.0)", "sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git@4af64bb#subdirectory=sse_solver_py"]
 sse-solver-py = ["sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git@4af64bb#subdirectory=sse_solver_py"]
@@ -1135,8 +1135,8 @@ sse-solver-py = ["sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/slate_quantum.git"
-reference = "3c99b35"
-resolved_reference = "3c99b350f54a645a102d2bc93cc1769e440dbcfe"
+reference = "e721027"
+resolved_reference = "e7210270aa22e3efa24b24e9e935ae9d24d6c05c"
 
 [[package]]
 name = "snowballstemmer"
@@ -1322,4 +1322,4 @@ plot = ["matplotlib", "slate"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13,<3.14"
-content-hash = "3b6dce3fb9728f8454d11543c5cbf4448a41d216e8a6fad38858507585691524"
+content-hash = "6baf27693a6f1a6110165e774677e31ca72233118c88be09c595e7dd017805f0"
