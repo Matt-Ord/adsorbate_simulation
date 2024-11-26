@@ -10,8 +10,8 @@ packages = [{ include = "adsorbate_simulation" }]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
-slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "bd61dd2" }
-slate_quantum = { git = "https://github.com/Matt-Ord/slate_quantum.git", rev = "3c99b35" }
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "3864bf1" }
+slate_quantum = { git = "https://github.com/Matt-Ord/slate_quantum.git", rev = "e721027" }
 scipy = "^1.14.1"
 
 [tool.poetry.group.dev.dependencies]
