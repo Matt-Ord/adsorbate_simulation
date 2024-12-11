@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore libary
-from slate import FundamentalBasis
+from slate import FundamentalBasis, array
 from slate.metadata import LabelSpacing
 from slate.plot import animate_data_over_list_1d_x, plot_data_1d_x
+from slate_quantum import operator
 from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
-from slate_quantum.model import SpacedTimeMetadata, operator
+from slate_quantum.metadata import SpacedTimeMetadata
 
 from adsorbate_simulation.system import DIMENSIONLESS_SYSTEM_1D, SimulationBasis
 
@@ -20,7 +21,12 @@ if __name__ == "__main__":
     system = system.with_potential(system.potential.with_barrier_height(1.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, _ = plot_data_1d_x(potential.diagonal())
+    fig, ax, line = plot_data_1d_x(array.as_outer_array(potential))
+    line.set_linestyle("--")
+    line.set_alpha(0.5)
+    line.set_color("black")
+    line.set_linewidth(2)
+
     hamiltonian = system.get_hamiltonian(basis)
     eigenstates = (
         operator.into_diagonal_hermitian(hamiltonian).basis.inner[1].eigenvectors

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from adsorbate_simulation.system._basis import SimulationBasis
+from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
 from adsorbate_simulation.system._condition import SimulationCondition
 from adsorbate_simulation.system._config import (
     ClosedEnvironment,
     Environment,
+    IsotropicSimulationConfig,
+    PeriodicCaldeiraLeggettEnvironment,
     SimulationConfig,
 )
 from adsorbate_simulation.system._potential import (
@@ -29,7 +31,10 @@ __all__ = [
     "CosPotential",
     "Environment",
     "FreePotential",
+    "IsotropicSimulationConfig",
+    "PeriodicCaldeiraLeggettEnvironment",
     "SimulationBasis",
+    "SimulationCell",
     "SimulationCondition",
     "SimulationConfig",
     "SimulationPotential",
