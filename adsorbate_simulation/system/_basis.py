@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from slate import StackedMetadata, basis
-from slate.basis import Basis
 from slate.metadata import (
     AxisDirections,
     LabelSpacing,
@@ -14,6 +13,7 @@ from slate.metadata import (
 
 if TYPE_CHECKING:
     import numpy as np
+    from slate.basis import Basis
 
 
 @dataclass(frozen=True, kw_only=True)

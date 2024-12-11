@@ -20,12 +20,10 @@ from slate_quantum.noise import (
 )
 from slate_quantum.operator import OperatorList
 
-from adsorbate_simulation.system._basis import SimulationCell
-
 if TYPE_CHECKING:
     from slate.metadata import SpacedVolumeMetadata
 
-    from adsorbate_simulation.system._basis import SimulationBasis
+    from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
 
 
 class Environment(ABC):
