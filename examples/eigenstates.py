@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from slate import array
 from slate.plot import plot_data_1d_k, plot_data_1d_x
-from slate_quantum.model import operator
+from slate_quantum import operator
 
 from adsorbate_simulation.system import DIMENSIONLESS_SYSTEM_1D, SimulationBasis
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     system = system.with_potential(system.potential.with_barrier_height(1.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, _ = plot_data_1d_x(potential.diagonal())
+    fig, ax, _ = plot_data_1d_x(array.as_outer_array(potential))
     hamiltonian = system.get_hamiltonian(basis)
     eigenstates = (
         operator.into_diagonal_hermitian(hamiltonian).basis.inner[1].eigenvectors

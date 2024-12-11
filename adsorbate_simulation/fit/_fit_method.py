@@ -13,25 +13,25 @@ from typing import (
 
 import numpy as np
 from scipy.optimize import curve_fit  # type: ignore unknown
-from slate.array import SlateArray
-from slate.basis import FundamentalBasis
+from slate.array import Array
+from slate.basis import FundamentalBasis, as_index_basis
 from slate.metadata import LabeledMetadata
 
-from adsorbate_simulation.system import SimulationCondition, SimulationPotential
+from adsorbate_simulation.system import SimulationCondition
 
 
 class FitMethod[T, I: Any](ABC):
     """A method used for fitting an ISF."""
 
     @override
-    def __hash__(self: Self) -> int:
+    def __hash__(self) -> int:
         h = hashlib.sha256(usedforsecurity=False)
         h.update(self.get_rate_label().encode())
         return int.from_bytes(h.digest(), "big")
 
     @abstractmethod
     def get_rate_from_fit(
-        self: Self,
+        self,
         fit: T,
     ) -> float: ...
 
@@ -67,20 +67,22 @@ class FitMethod[T, I: Any](ABC):
 
     @abstractmethod
     def _fit_param_initial_guess(
-        self: Self, data: SlateArray[LabeledMetadata[float], np.float64], info: I
+        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
     ) -> tuple[float, ...]: ...
 
     @abstractmethod
-    def get_rate_label(self: Self) -> str: ...
+    def get_rate_label(self) -> str: ...
 
     @abstractmethod
-    def get_fit_times(self: Self, info: I) -> LabeledMetadata[float]: ...
+    def get_fit_times(self, info: I) -> LabeledMetadata[np.float64]: ...
 
     def get_fit_from_isf(
-        self: Self, data: SlateArray[LabeledMetadata[float], np.float64], info: I
+        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
     ) -> T:
-        y_data = data.raw_data
-        times = np.asarray(data.basis.metadata().values)
+        converted = data.with_basis(as_index_basis(data.basis))
+        y_data = converted.raw_data
+
+        times = np.asarray(data.basis.metadata().values)[converted.basis.points]
         delta_t = np.max(times) - np.min(times)
         dt = (delta_t / times.size).item()
 
@@ -91,7 +93,7 @@ class FitMethod[T, I: Any](ABC):
             return np.real(self._fit_fn(x, *params))
 
         parameters, _covariance = cast(
-            tuple[list[float], Any],
+            "tuple[list[float], Any]",
             curve_fit(
                 _fit_fn,
                 times / dt,
@@ -107,25 +109,25 @@ class FitMethod[T, I: Any](ABC):
         return self._fit_from_params(*self._scale_params(dt, tuple(parameters)))
 
     def get_rate_from_isf(
-        self: Self, data: SlateArray[LabeledMetadata[float], np.float64], info: I
+        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
     ) -> float:
         fit = self.get_fit_from_isf(data, info)
         return self.get_rate_from_fit(fit)
 
     @classmethod
-    def get_fitted_data[M: LabeledMetadata[float]](
+    def get_fitted_data[M: LabeledMetadata[np.float64]](
         cls: type[Self],
         fit: T,
         times: M,
-    ) -> SlateArray[M, np.float64]:
+    ) -> Array[M, np.float64]:
         data = cls._fit_fn(np.asarray(times.values), *cls._params_from_fit(fit))
-        return SlateArray(FundamentalBasis(times), data)
+        return Array(FundamentalBasis(times), data)
 
     @classmethod
-    def get_function_for_fit[M: LabeledMetadata[float]](
+    def get_function_for_fit[M: LabeledMetadata[np.float64]](
         cls: type[Self],
         fit: T,
-    ) -> Callable[[M], SlateArray[M, np.float64]]:
+    ) -> Callable[[M], Array[M, np.float64]]:
         return functools.partial(cls.get_fitted_data, fit)
 
     @classmethod
@@ -133,4 +135,4 @@ class FitMethod[T, I: Any](ABC):
         return len(cls._fit_param_bounds()[0])
 
 
-class ISFFitMethod[T](FitMethod[T, SimulationCondition[SimulationPotential]]): ...
+class ISFFitMethod[T](FitMethod[T, SimulationCondition]): ...
