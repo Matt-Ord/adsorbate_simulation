@@ -24,14 +24,14 @@ class SimulationPotential(ABC):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         """Get the potential for the repeat cell of the simulation."""
 
     def get_potential(
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         """Get the potential for the simulation."""
         potential = self.get_repeat_potential(cell, simulation_basis)
         return operator.repeat_potential(potential, simulation_basis.shape)
@@ -54,7 +54,7 @@ class CosPotential(SimulationPotential):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         return operator.build.cos_potential(
             simulation_basis.get_repeat_basis(cell).metadata(),
             self.barrier_height,

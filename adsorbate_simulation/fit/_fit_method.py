@@ -4,8 +4,8 @@ import functools
 import hashlib
 from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
-    Callable,
     Self,
     cast,
     override,
@@ -19,6 +19,9 @@ from slate.metadata import LabeledMetadata
 
 from adsorbate_simulation.system import SimulationCondition
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 class FitMethod[T, I: Any](ABC):
     """A method used for fitting an ISF."""
@@ -26,21 +29,15 @@ class FitMethod[T, I: Any](ABC):
     @override
     def __hash__(self) -> int:
         h = hashlib.sha256(usedforsecurity=False)
-        h.update(self.get_rate_label().encode())
+        h.update(self.get_fit_label().encode())
         return int.from_bytes(h.digest(), "big")
-
-    @abstractmethod
-    def get_rate_from_fit(
-        self,
-        fit: T,
-    ) -> float: ...
 
     @staticmethod
     @abstractmethod
     def _fit_fn(
-        x: np.ndarray[Any, np.dtype[np.float64]],
+        x: np.ndarray[Any, np.dtype[np.floating]],
         *params: *tuple[float, ...],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]: ...
+    ) -> np.ndarray[Any, np.dtype[np.floating]]: ...
 
     @staticmethod
     @abstractmethod
@@ -57,9 +54,23 @@ class FitMethod[T, I: Any](ABC):
     @staticmethod
     @abstractmethod
     def _scale_params(
-        dt: float,
+        dx: float,
         params: tuple[float, ...],
     ) -> tuple[float, ...]: ...
+
+    @staticmethod
+    def _scale_y_data(
+        data: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    ) -> np.ndarray[Any, np.dtype[np.floating[Any]]]:
+        return data
+
+    @classmethod
+    def _scale_y_error(
+        cls,
+        data: np.ndarray[Any, np.dtype[np.floating[Any]]],
+        y_error: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    ) -> np.ndarray[Any, np.dtype[np.floating[Any]]]:
+        return cls._scale_y_data(y_error + data) - cls._scale_y_data(data)
 
     @staticmethod
     @abstractmethod
@@ -67,67 +78,68 @@ class FitMethod[T, I: Any](ABC):
 
     @abstractmethod
     def _fit_param_initial_guess(
-        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
+        self, data: Array[LabeledMetadata[np.floating], np.floating], info: I
     ) -> tuple[float, ...]: ...
 
     @abstractmethod
-    def get_rate_label(self) -> str: ...
+    def get_fit_label(self) -> str: ...
 
-    @abstractmethod
-    def get_fit_times(self, info: I) -> LabeledMetadata[np.float64]: ...
-
-    def get_fit_from_isf(
-        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
+    def get_fit_from_data(
+        self,
+        data: Array[LabeledMetadata[np.floating], np.floating],
+        info: I,
+        *,
+        y_error: Array[LabeledMetadata[np.floating], np.floating] | None = None,
     ) -> T:
         converted = data.with_basis(as_index_basis(data.basis))
         y_data = converted.raw_data
 
-        times = np.asarray(data.basis.metadata().values)[converted.basis.points]
-        delta_t = np.max(times) - np.min(times)
-        dt = (delta_t / times.size).item()
+        x_values = np.asarray(data.basis.metadata().values)[converted.basis.points]
+        delta_x = np.max(x_values) - np.min(x_values)
+        dx = (delta_x / x_values.size).item()
+
+        sigma = (
+            self._scale_y_error(y_data, y_error.with_basis(converted.basis).raw_data)
+            if y_error is not None
+            else None
+        )
 
         def _fit_fn(
-            x: np.ndarray[Any, np.dtype[np.float64]],
-            *params: *tuple[float, ...],
-        ) -> np.ndarray[Any, np.dtype[np.float64]]:
-            return np.real(self._fit_fn(x, *params))
+            x: np.ndarray[Any, np.dtype[np.floating]], *params: *tuple[float, ...]
+        ) -> np.ndarray[Any, np.dtype[np.floating[Any]]]:
+            return self._scale_y_data(self._fit_fn(x, *params))
 
         parameters, _covariance = cast(
             "tuple[list[float], Any]",
             curve_fit(
                 _fit_fn,
-                times / dt,
-                y_data,
+                x_values / dx,
+                self._scale_y_data(y_data),
                 p0=self._scale_params(
-                    1 / dt,
+                    dx,
                     self._fit_param_initial_guess(data, info),
                 ),
                 bounds=self._fit_param_bounds(),
+                sigma=sigma,
             ),
         )
 
-        return self._fit_from_params(*self._scale_params(dt, tuple(parameters)))
-
-    def get_rate_from_isf(
-        self, data: Array[LabeledMetadata[np.float64], np.float64], info: I
-    ) -> float:
-        fit = self.get_fit_from_isf(data, info)
-        return self.get_rate_from_fit(fit)
+        return self._fit_from_params(*self._scale_params(1 / dx, tuple(parameters)))
 
     @classmethod
-    def get_fitted_data[M: LabeledMetadata[np.float64]](
+    def get_fitted_data[M: LabeledMetadata[np.floating]](
         cls: type[Self],
         fit: T,
         times: M,
-    ) -> Array[M, np.float64]:
+    ) -> Array[M, np.floating]:
         data = cls._fit_fn(np.asarray(times.values), *cls._params_from_fit(fit))
         return Array(FundamentalBasis(times), data)
 
     @classmethod
-    def get_function_for_fit[M: LabeledMetadata[np.float64]](
+    def get_function_for_fit[M: LabeledMetadata[np.floating]](
         cls: type[Self],
         fit: T,
-    ) -> Callable[[M], Array[M, np.float64]]:
+    ) -> Callable[[M], Array[M, np.floating]]:
         return functools.partial(cls.get_fitted_data, fit)
 
     @classmethod
@@ -135,4 +147,22 @@ class FitMethod[T, I: Any](ABC):
         return len(cls._fit_param_bounds()[0])
 
 
-class ISFFitMethod[T](FitMethod[T, SimulationCondition]): ...
+class ISFFitMethod[T](FitMethod[T, SimulationCondition]):
+    def get_rate_from_data(
+        self,
+        data: Array[LabeledMetadata[np.floating], np.floating],
+        info: SimulationCondition,
+    ) -> float:
+        fit = self.get_fit_from_data(data, info)
+        return self.get_rate_from_fit(fit)
+
+    @abstractmethod
+    def get_rate_from_fit(
+        self,
+        fit: T,
+    ) -> float: ...
+
+    @abstractmethod
+    def get_fit_times(
+        self, info: SimulationCondition
+    ) -> LabeledMetadata[np.floating]: ...

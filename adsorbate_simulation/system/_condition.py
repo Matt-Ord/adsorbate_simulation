@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from adsorbate_simulation.system._system import System
 
 
-@dataclass
+@dataclass(frozen=True)
 class SimulationCondition[
     S: System[Any] = System[Any],
     C: SimulationConfig = SimulationConfig,
@@ -40,17 +40,21 @@ class SimulationCondition[
         """Create a new condition with different config."""
         return SimulationCondition(self.system, config)
 
+    def with_temperature(self, temperature: float) -> SimulationCondition[S, C]:
+        """Create a new condition with different temperature."""
+        return self.with_config(self.config.with_temperature(temperature))
+
     @property
     def potential(
         self,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         """Get the potential for the simulation."""
         return self.system.get_potential(self.config.simulation_basis)
 
     @property
     def hamiltonian(
         self,
-    ) -> Operator[SpacedVolumeMetadata, np.complex128]:
+    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
         return self.system.get_hamiltonian(self.config.simulation_basis)
 
     @property
