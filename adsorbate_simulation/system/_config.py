@@ -8,7 +8,6 @@ import numpy as np
 from slate import basis as _basis
 from slate import tuple_basis
 from slate.basis import diagonal_basis
-from slate_quantum import Operator, operator
 from slate_quantum.metadata import eigenvalue_basis
 from slate_quantum.noise import (
     DiagonalNoiseOperatorList,
@@ -16,12 +15,14 @@ from slate_quantum.noise import (
     NoiseKernel,
     NoiseOperatorList,
     build_periodic_caldeira_leggett_operators,
+    build_periodic_caldeira_leggett_real_operators,
     get_temperature_corrected_operators,
 )
 from slate_quantum.operator import OperatorList
 
 if TYPE_CHECKING:
     from slate.metadata import SpacedVolumeMetadata
+    from slate_quantum import Operator
 
     from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
 
@@ -39,19 +40,18 @@ class Environment(ABC):
 
     def get_temperature_corrected_operators(
         self,
-        hamiltonian: Operator[SpacedVolumeMetadata, np.complex128],
+        hamiltonian: Operator[SpacedVolumeMetadata, np.complexfloating],
         temperature: float,
     ) -> NoiseOperatorList[SpacedVolumeMetadata]:
         metadata = (hamiltonian.basis.metadata())[0]
         operators = get_temperature_corrected_operators(
             hamiltonian, self.get_operators(metadata), temperature, self.eta
         )
-        operators = operator.build.filter_scatter_operators(operators)
         return operators.with_operator_basis(_basis.as_tuple_basis(operators.basis)[1])
 
     def get_noise_kernel(
         self, metadata: SpacedVolumeMetadata
-    ) -> NoiseKernel[SpacedVolumeMetadata, np.complex128]:
+    ) -> NoiseKernel[SpacedVolumeMetadata, np.complexfloating]:
         return NoiseKernel.from_operators(self.get_operators(metadata))
 
     @override
@@ -72,7 +72,7 @@ class IsotropicEnvironment(Environment):
     @override
     def get_noise_kernel(
         self, metadata: SpacedVolumeMetadata
-    ) -> IsotropicNoiseKernel[SpacedVolumeMetadata, np.complex128]:
+    ) -> IsotropicNoiseKernel[SpacedVolumeMetadata, np.complexfloating]:
         return IsotropicNoiseKernel.from_operators(self.get_operators(metadata))
 
 
@@ -124,6 +124,7 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
         self, metadata: SpacedVolumeMetadata
     ) -> DiagonalNoiseOperatorList[SpacedVolumeMetadata]:
         operators = build_periodic_caldeira_leggett_operators(metadata)
+        operators = build_periodic_caldeira_leggett_real_operators(metadata)
         return operators.with_operator_basis(operators.basis[1].inner)
 
 
@@ -200,7 +201,7 @@ class SimulationConfig:
         return self.simulation_basis.get_fundamental_metadata(cell)
 
     def get_temperature_corrected_operators(
-        self, hamiltonian: Operator[SpacedVolumeMetadata, np.complex128]
+        self, hamiltonian: Operator[SpacedVolumeMetadata, np.complexfloating]
     ) -> NoiseOperatorList[SpacedVolumeMetadata]:
         return self.environment.get_temperature_corrected_operators(
             hamiltonian, self.temperature

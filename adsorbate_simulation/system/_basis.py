@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from slate import StackedMetadata, basis
+from slate import StackedMetadata, TupleBasis, basis, tuple_basis
 from slate.metadata import (
     AxisDirections,
     LabelSpacing,
@@ -35,8 +36,8 @@ class SimulationCell:
         )
 
 
-@dataclass(frozen=True)
-class SimulationBasis:
+@dataclass(frozen=True, kw_only=True)
+class SimulationBasis(ABC):
     """The underlying basis for a simulation."""
 
     shape: tuple[int, ...]
@@ -44,13 +45,13 @@ class SimulationBasis:
     resolution: tuple[int, ...]
     """The number of states per repeated unit in each direction."""
 
+    @abstractmethod
     def with_resolution(self, resolution: tuple[int, ...]) -> SimulationBasis:
         """Create a new basis with a different resolution."""
-        return SimulationBasis(self.shape, resolution)
 
+    @abstractmethod
     def with_shape(self, shape: tuple[int, ...]) -> SimulationBasis:
         """Create a new basis with a different shape."""
-        return SimulationBasis(shape, self.resolution)
 
     def get_repeat_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:
         """Get the metadata for the repeat cell of the simulation."""
@@ -80,6 +81,97 @@ class SimulationBasis:
 
     def get_fundamental_basis(
         self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    ) -> TupleBasis[SpacedLengthMetadata, AxisDirections, np.complex128]:
         """Get the fundamental basis for the simulation."""
         return basis.from_metadata(self.get_fundamental_metadata(cell))
+
+    def get_operator_basis(
+        self, cell: SimulationCell
+    ) -> basis.TupleBasis2D[
+        np.complexfloating,
+        Basis[SpacedVolumeMetadata, np.complex128],
+        Basis[SpacedVolumeMetadata, np.complex128],
+        None,
+    ]:
+        """Get the basis for the simulation."""
+        state_basis = self.get_state_basis(cell)
+        return tuple_basis((state_basis, state_basis.dual_basis()))
+
+    @abstractmethod
+    def get_state_basis(
+        self, cell: SimulationCell
+    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+        """Get the basis for the simulation."""
+
+
+class FundamentalSimulationBasis(SimulationBasis):
+    """The fundamental basis for a simulation."""
+
+    @override
+    def with_resolution(
+        self, resolution: tuple[int, ...]
+    ) -> FundamentalSimulationBasis:
+        """Create a new basis with a different resolution."""
+        return type(self)(shape=self.shape, resolution=resolution)
+
+    @override
+    def with_shape(self, shape: tuple[int, ...]) -> FundamentalSimulationBasis:
+        """Create a new basis with a different shape."""
+        return type(self)(shape=shape, resolution=self.resolution)
+
+    @override
+    def get_state_basis(
+        self, cell: SimulationCell
+    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+        """Get the basis for the simulation."""
+        return self.get_fundamental_basis(cell)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MomentumSimulationBasis(SimulationBasis):
+    """The truncated basis for a simulation."""
+
+    truncation: tuple[int, ...] | None = None
+    """The number of states to truncate in each direction."""
+
+    @override
+    def with_resolution(self, resolution: tuple[int, ...]) -> MomentumSimulationBasis:
+        """Create a new basis with a different resolution."""
+        return type(self)(shape=self.shape, resolution=resolution)
+
+    @override
+    def with_shape(self, shape: tuple[int, ...]) -> MomentumSimulationBasis:
+        """Create a new basis with a different shape."""
+        return type(self)(shape=shape, resolution=self.resolution)
+
+    def with_truncation(self, truncation: tuple[int, ...]) -> MomentumSimulationBasis:
+        """Create a new basis with a different truncation."""
+        return type(self)(
+            shape=self.shape, resolution=self.resolution, truncation=truncation
+        )
+
+    @override
+    def get_state_basis(
+        self, cell: SimulationCell
+    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+        """Get the basis for the simulation."""
+        fundamental = self.get_fundamental_basis(cell)
+        truncation = self.truncation or fundamental.shape
+
+        return tuple_basis(
+            tuple(
+                basis.CroppedBasis(
+                    s,
+                    basis.TransformedBasis(basis.FundamentalBasis(m)),
+                )
+                for s, m in zip(truncation, fundamental.metadata().children)
+            ),
+            fundamental.metadata().extra,
+        )
+
+        return basis.with_modified_children(
+            basis.fundamental_transformed_tuple_basis_from_metadata(
+                fundamental.metadata(), is_dual=fundamental.is_dual
+            ),
+            lambda i, b: basis.CroppedBasis(truncation[i], b),
+        )

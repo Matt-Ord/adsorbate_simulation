@@ -2,26 +2,29 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore libary
-from slate import FundamentalBasis, array
+from slate import FundamentalBasis, array, plot
 from slate.metadata import LabelSpacing
-from slate.plot import animate_data_over_list_1d_x, plot_data_1d_x
+from slate.plot import animate_data_over_list_1d_x
 from slate_quantum import operator
 from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
 from slate_quantum.metadata import SpacedTimeMetadata
 
-from adsorbate_simulation.system import DIMENSIONLESS_SYSTEM_1D, SimulationBasis
+from adsorbate_simulation.system import (
+    DIMENSIONLESS_SYSTEM_1D,
+    FundamentalSimulationBasis,
+)
 
 if __name__ == "__main__":
     # This is a simple example of plotting the eigenstates of an adsorbate system.
     # Here we create a system in 1D with a repeating cosine potential
     system = DIMENSIONLESS_SYSTEM_1D
     # We create a basis with 3 unit cells and 100 points per unit cell
-    basis = SimulationBasis((3,), (100,))
+    basis = FundamentalSimulationBasis(shape=(3,), resolution=(100,))
     # We add a cosine potential to the system
     system = system.with_potential(system.potential.with_barrier_height(1.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, line = plot_data_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_color("black")

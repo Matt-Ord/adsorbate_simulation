@@ -55,14 +55,14 @@ class System[P: SimulationPotential]:
     def get_potential(
         self,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         """Get the potential for the simulation."""
         return self.potential.get_potential(self.cell, simulation_basis)
 
     def get_hamiltonian(
         self,
         simulation_basis: SimulationBasis,
-    ) -> Operator[SpacedVolumeMetadata, np.complex128]:
+    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
         """Get the hamiltonian for the simulation."""
         return operator.build_kinetic_hamiltonian(
             self.get_potential(simulation_basis), self.mass

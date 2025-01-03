@@ -10,8 +10,8 @@ packages = [{ include = "adsorbate_simulation" }]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
-slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "46e5df3" }
-slate_quantum = { git = "https://github.com/Matt-Ord/slate_quantum.git", rev = "1b853cf", extras = [
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "94e56f7" }
+slate_quantum = { git = "https://github.com/Matt-Ord/slate_quantum.git", rev = "901acfe", extras = [
     "plot",
     "sse_solver_py",
 ] }
