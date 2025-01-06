@@ -15,9 +15,9 @@ from adsorbate_simulation.util import (
     get_gaussian_width,
     get_momentum,
     get_periodic_position,
+    run_simulation,
     spaced_time_basis,
 )
-from examples.stochastic_schrodinger.util import run_simulation
 
 if __name__ == "__main__":
     # Gaussian states are a common choice for initial state

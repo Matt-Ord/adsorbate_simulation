@@ -18,9 +18,9 @@ from adsorbate_simulation.system import (
 )
 from adsorbate_simulation.util import (
     get_eigenvalue_occupation_hermitian,
+    run_simulation,
     spaced_time_basis,
 )
-from examples.stochastic_schrodinger.util import run_simulation
 
 if __name__ == "__main__":
     # When we perform a simulation, we need to make sure we recover the

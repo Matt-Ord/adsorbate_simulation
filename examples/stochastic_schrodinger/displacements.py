@@ -16,9 +16,9 @@ from adsorbate_simulation.util import (
     get_periodic_position,
     get_restored_displacements,
     get_restored_position,
+    run_simulation,
     spaced_time_basis,
 )
-from examples.stochastic_schrodinger.util import run_simulation
 
 if __name__ == "__main__":
     # An important quantity to consider when simulating a system is the
