@@ -41,7 +41,7 @@ if __name__ == "__main__":
     states = dynamics.select_realization(states)
 
     # We start the system in an gaussian state, centered at the origin.
-    fig, ax, _ = plot.basis_against_array_1d_x(states[0], measure="abs")
+    fig, ax, _ = plot.basis_against_array_1d_x(states[0, :], measure="abs")
     ax.set_title("Initial State - A Gaussian Wavepacket Centered at the Origin")
     fig.show()
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     basis_list = basis.as_index_basis(basis.as_tuple_basis(states.basis)[0])
     for i in basis_list.points:
-        s = states[i.item()]
+        s = states[i.item(), :]
         assert np.isclose(1, state.normalization(s), atol=1e-2)
 
     input()

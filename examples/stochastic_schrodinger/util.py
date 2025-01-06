@@ -5,15 +5,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-from slate import Basis, SimpleMetadata
-from slate.metadata import Metadata2D
 from slate.util import cached
 from slate_quantum import StateList, state
 from slate_quantum.dynamics import solve_stochastic_schrodinger_equation_banded
 from slate_quantum.metadata import TimeMetadata
 
 if TYPE_CHECKING:
-    from slate.metadata import SpacedVolumeMetadata
+    from slate import Basis, SimpleMetadata
+    from slate.metadata import Metadata2D, SpacedVolumeMetadata
 
     from adsorbate_simulation.system import (
         FreePotential,
@@ -53,5 +52,5 @@ def run_simulation[M: TimeMetadata](
         hamiltonian,
         environment_operators,
         method="Order2ExplicitWeak",
-        target_delta=2e-5,
+        target_delta=0.5e-5,
     )

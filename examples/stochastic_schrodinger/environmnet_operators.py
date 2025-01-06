@@ -37,7 +37,9 @@ if __name__ == "__main__":
     # This generates isotropic periodic noise which matches classical friction.
     environment_operators = condition.get_environment_operators()
     for eigenvalue, operator in zip(
-        np.sqrt(environment_operators.basis.metadata()[0].values), environment_operators
+        np.sqrt(environment_operators.basis.metadata()[0].values),
+        environment_operators,
+        strict=False,
     ):
         fig, ax, _ = plot.basis_against_array_1d_x(
             array.as_diagonal_array(operator) * eigenvalue, measure="real"
@@ -52,8 +54,8 @@ if __name__ == "__main__":
     # These are no longer diagonal in position basis. To understand the effect
     # of this correction, we can plot the corrected operators in momentum space
     # and compare them to the original operators.
-    original_operator = environment_operators[0]
-    corrected_operator = condition.temperature_corrected_operators[0]
+    original_operator = environment_operators[0, :]
+    corrected_operator = condition.temperature_corrected_operators[0, :]
     # The original operator is a simple scatter from k -> k + \kappa
     # Each scatter has the same probability, and we only see occupation of
     # states which k' = k + \kappa
@@ -83,7 +85,7 @@ if __name__ == "__main__":
 
     # The equivalent plot for the second operator, we see an increase in the negative k region.
     # In both cases we are more likely to scatter to states with lower energy.
-    corrected_operator = condition.temperature_corrected_operators[1]
+    corrected_operator = condition.temperature_corrected_operators[1, :]
     fig, ax, _ = plot.basis_against_array_2d_k(
         array.flatten(corrected_operator), measure="abs"
     )

@@ -22,7 +22,7 @@ if __name__ == "__main__":
         operator.into_diagonal_hermitian(hamiltonian).basis.inner[1].eigenvectors
     )
     # The eigenstates of this system are the momentum states
-    fig, _, _ = plot.basis_against_array_1d_k(eigenstates[0])
+    fig, _, _ = plot.basis_against_array_1d_k(eigenstates[0, :])
     fig.show()
 
     # But what if we were to add a cosine potential to the system?
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     )
     # The eigenstates of this system are plotted in position basis
     # We can see that the state is localized around the minima of the potential
-    _, _, line = plot.basis_against_array_1d_x(eigenstates[0], ax=ax.twinx())
+    _, _, line = plot.basis_against_array_1d_x(eigenstates[0, :], ax=ax.twinx())
     line.set_color("C1")
     fig.show()
 

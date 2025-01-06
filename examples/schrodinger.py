@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # We start the system in an eigenstate of the new potential
     # if we evolve it in time it remains in the same state
     # but the global phase changes
-    initial_state = eigenstates[0]
+    initial_state = eigenstates[0, :]
     times = FundamentalBasis(
         SpacedTimeMetadata(60, spacing=LabelSpacing(delta=8 * np.pi * hbar))
     )
