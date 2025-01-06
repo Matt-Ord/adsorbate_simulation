@@ -29,7 +29,7 @@ if __name__ == "__main__":
         DIMENSIONLESS_SYSTEM_1D,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
-                shape=(3,), resolution=(45,), truncation=(3 * 35,)
+                shape=(3,), resolution=(55,), truncation=(3 * 45,)
             ),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
             temperature=10 / Boltzmann,

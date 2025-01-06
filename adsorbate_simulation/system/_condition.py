@@ -101,3 +101,8 @@ class SimulationCondition[
     def mass(self) -> float:
         """The mass of the system."""
         return self.system.mass
+
+    @property
+    def eta(self) -> float:
+        """The friction coefficient of the system."""
+        return self.config.environment.eta
