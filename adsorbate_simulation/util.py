@@ -67,6 +67,7 @@ def spaced_time_basis(*, n: int, dt: float) -> FundamentalBasis[SpacedTimeMetada
 def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
     condition: SimulationCondition[Any, Any],
 ) -> float:
+    """Get the rate of displacement of a free particle."""
     return (
         2
         * Boltzmann
@@ -80,6 +81,7 @@ def get_free_displacements[M: TimeMetadata](
     condition: SimulationCondition[Any, Any],
     times: M,
 ) -> Array[M, np.floating]:
+    """Get the displacement of a free particle."""
     rate = get_free_displacement_rate(condition)
     return Array(basis.from_metadata(times), times.values * rate)
 
@@ -215,7 +217,7 @@ def _calculate_total_offsset_multiplications_real(
     -------
     np.ndarray[Any, np.dtype[np.float64]]
     """
-    return scipy.signal.correlate(lhs, rhs, mode="full")[lhs.size - 1 :]  # type: ignore
+    return scipy.signal.correlate(lhs, rhs, mode="full")[lhs.size - 1 :]  # type: ignore unknown
 
 
 def get_restored_displacements[

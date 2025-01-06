@@ -58,7 +58,7 @@ class SimulationBasis(ABC):
         return StackedMetadata(
             tuple(
                 SpacedLengthMetadata(r, spacing=LabelSpacing(delta=delta))
-                for r, delta in zip(self.resolution, cell.lengths)
+                for r, delta in zip(self.resolution, cell.lengths, strict=False)
             ),
             cell.directions,
         )
@@ -74,7 +74,7 @@ class SimulationBasis(ABC):
         return StackedMetadata(
             tuple(
                 SpacedLengthMetadata(s * r, spacing=LabelSpacing(delta=delta * s))
-                for (s, r, delta) in zip(self.shape, self.resolution, cell.lengths)
+                for (s, r, delta) in zip(self.shape, self.resolution, cell.lengths, strict=False)
             ),
             cell.directions,
         )
@@ -164,7 +164,7 @@ class MomentumSimulationBasis(SimulationBasis):
                     s,
                     basis.TransformedBasis(basis.FundamentalBasis(m)),
                 )
-                for s, m in zip(truncation, fundamental.metadata().children)
+                for s, m in zip(truncation, fundamental.metadata().children, strict=False)
             ),
             fundamental.metadata().extra,
         )
