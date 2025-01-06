@@ -15,8 +15,7 @@ from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
     SimulationCondition,
 )
-from adsorbate_simulation.util import spaced_time_basis
-from examples.stochastic_schrodinger.util import run_simulation
+from adsorbate_simulation.util import run_simulation, spaced_time_basis
 
 if __name__ == "__main__":
     # This is a simple example of simulating the system using the stochastic schrodinger
