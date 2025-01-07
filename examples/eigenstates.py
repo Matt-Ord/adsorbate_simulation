@@ -3,15 +3,15 @@ from __future__ import annotations
 from slate import array, plot
 from slate_quantum import operator
 
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.system import (
-    DIMENSIONLESS_SYSTEM_1D,
     FundamentalSimulationBasis,
 )
 
 if __name__ == "__main__":
     # This is a simple example of plotting the eigenstates of an adsorbate system.
     # Here we create a system in 1D with a repeating cosine potential
-    system = DIMENSIONLESS_SYSTEM_1D
+    system = DIMENSIONLESS_1D_SYSTEM
     # We create a basis with 3 unit cells and 100 points per unit cell
     basis = FundamentalSimulationBasis(shape=(3,), resolution=(100,))
 

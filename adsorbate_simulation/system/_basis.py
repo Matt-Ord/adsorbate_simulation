@@ -24,6 +24,9 @@ class SimulationCell:
     lengths: tuple[float, ...]
     directions: AxisDirections
 
+    def __post_init__(self) -> None:
+        assert len(self.lengths) == len(self.directions.vectors)
+
     def with_lengths(self, lengths: tuple[float, ...]) -> SimulationCell:
         """Create a new cell with different lengths."""
         return type(self)(lengths=lengths, directions=self.directions)
@@ -74,7 +77,9 @@ class SimulationBasis(ABC):
         return StackedMetadata(
             tuple(
                 SpacedLengthMetadata(s * r, spacing=LabelSpacing(delta=delta * s))
-                for (s, r, delta) in zip(self.shape, self.resolution, cell.lengths, strict=False)
+                for (s, r, delta) in zip(
+                    self.shape, self.resolution, cell.lengths, strict=False
+                )
             ),
             cell.directions,
         )
@@ -164,7 +169,9 @@ class MomentumSimulationBasis(SimulationBasis):
                     s,
                     basis.TransformedBasis(basis.FundamentalBasis(m)),
                 )
-                for s, m in zip(truncation, fundamental.metadata().children, strict=False)
+                for s, m in zip(
+                    truncation, fundamental.metadata().children, strict=False
+                )
             ),
             fundamental.metadata().extra,
         )

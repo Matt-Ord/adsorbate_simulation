@@ -5,6 +5,9 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
 	"features": {
+		"ghcr.io/devcontainers/features/python:1": {
+			"version": "3.13"
+		},
 		"ghcr.io/va-h/devcontainers-features/uv:1": {
 			"shellautocompletion": true,
 			"version": "latest"
@@ -139,7 +142,12 @@
 					"yerr",
 					"ylabel",
 					"ylim",
-					"yscale"
+					"yscale",
+					"pytest",
+					"pyright",
+					"isort",
+					"numpy",
+					"pydocstyle"
 				]
 			},
 			"extensions": [
@@ -154,5 +162,5 @@
 			]
 		}
 	},
-	"onCreateCommand": "uv python install && uv sync --all-extras"
+	"onCreateCommand": "uv sync --all-extras"
 }

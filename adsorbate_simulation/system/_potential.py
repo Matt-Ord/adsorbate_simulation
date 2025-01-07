@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from scipy.constants import electron_volt  # type: ignore  no type hints for scipy
 from slate_quantum import operator
 
 if TYPE_CHECKING:
@@ -61,13 +60,38 @@ class CosPotential(SimulationPotential):
         )
 
 
+@dataclass(frozen=True, kw_only=True)
+class FCCPotential(SimulationPotential):
+    """A simple cosine potential, with a single barrier height."""
+
+    top_site_energy: float
+
+    def with_top_site_energy(self, top_site_energy: float) -> FCCPotential:  # noqa: PLR6301
+        """Create a new system with different barrier height."""
+        return FCCPotential(
+            top_site_energy=top_site_energy,
+        )
+
+    def with_bridge_site_energy(self, bridge_site_energy: float) -> FCCPotential:  # noqa: PLR6301
+        """Create a new system with different barrier height."""
+        return FCCPotential(
+            top_site_energy=9 * bridge_site_energy,
+        )
+
+    @override
+    def get_repeat_potential(
+        self,
+        cell: SimulationCell,
+        simulation_basis: SimulationBasis,
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+        return operator.build.fcc_potential(
+            simulation_basis.get_repeat_basis(cell).metadata(),
+            self.top_site_energy,
+        )
+
+
 class FreePotential(CosPotential):
     """A potential with no barrier height."""
 
     def __init__(self) -> None:
         super().__init__(barrier_height=0.0)
-
-
-LI_CU_COS_POTENTIAL = CosPotential(
-    barrier_height=45e-3 * electron_volt,
-)
