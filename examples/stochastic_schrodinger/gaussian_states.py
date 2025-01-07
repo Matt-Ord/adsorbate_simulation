@@ -4,8 +4,9 @@ import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore library
 from slate import metadata, plot
 
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
-    DIMENSIONLESS_SYSTEM_1D,
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
     PeriodicCaldeiraLeggettEnvironment,
@@ -15,7 +16,6 @@ from adsorbate_simulation.util import (
     get_gaussian_width,
     get_momentum,
     get_periodic_position,
-    run_simulation,
     spaced_time_basis,
 )
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # For a consistent choice, we can run a simulation
     # and fit the resulting states to a Gaussian.
     condition = SimulationCondition(
-        DIMENSIONLESS_SYSTEM_1D,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(3,), resolution=(45,), truncation=(3 * 35,)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         ),
     )
     times = spaced_time_basis(n=10001, dt=0.1 * np.pi * hbar)
-    states = run_simulation(condition, times)
+    states = run_stochastic_simulation(condition, times)
 
     # Using the e^{ikx} operator, we can calculate the position
     # of the wavepacket.

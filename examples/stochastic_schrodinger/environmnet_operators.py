@@ -4,8 +4,8 @@ import numpy as np
 from scipy.constants import Boltzmann  # type: ignore libary
 from slate import array, basis, plot
 
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.system import (
-    DIMENSIONLESS_SYSTEM_1D,
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
     PeriodicCaldeiraLeggettEnvironment,
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_SYSTEM_1D,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(shape=(4,), resolution=(25,)),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),

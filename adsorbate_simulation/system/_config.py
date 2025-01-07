@@ -140,6 +140,7 @@ class SimulationConfig:
         kw_only=True,
     )
     direction: tuple[int, ...] | None = field(default=None, kw_only=True)
+    target_delta: float = field(default=1e-5, kw_only=True)
 
     def __post_init__(self) -> None:
         assert self.scattered_energy_range[0] <= self.scattered_energy_range[1]
@@ -195,6 +196,17 @@ class SimulationConfig:
             temperature=self.temperature,
             scattered_energy_range=self.scattered_energy_range,
             direction=direction,
+        )
+
+    def with_target_delta(self, target_delta: float) -> Self:
+        """Create a new config with different target delta."""
+        return type(self)(
+            simulation_basis=self.simulation_basis,
+            environment=self.environment,
+            temperature=self.temperature,
+            scattered_energy_range=self.scattered_energy_range,
+            direction=self.direction,
+            target_delta=target_delta,
         )
 
     def get_fundamental_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:

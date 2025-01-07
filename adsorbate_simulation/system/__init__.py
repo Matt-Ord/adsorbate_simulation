@@ -17,21 +17,15 @@ from adsorbate_simulation.system._config import (
     SimulationConfig,
 )
 from adsorbate_simulation.system._potential import (
-    LI_CU_COS_POTENTIAL,
     CosPotential,
     FreePotential,
     SimulationPotential,
 )
 from adsorbate_simulation.system._system import (
-    DIMENSIONLESS_SYSTEM_1D,
-    LI_CU_SYSTEM_1D,
     System,
 )
 
 __all__ = [
-    "DIMENSIONLESS_SYSTEM_1D",
-    "LI_CU_COS_POTENTIAL",
-    "LI_CU_SYSTEM_1D",
     "ClosedEnvironment",
     "CosPotential",
     "Environment",

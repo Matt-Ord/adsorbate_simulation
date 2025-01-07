@@ -5,12 +5,13 @@ from scipy.constants import Boltzmann, hbar  # type: ignore lib
 from slate import Array, array, plot
 from slate_quantum import operator, state
 
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.fit import (
     TemperatureFitInfo,
     TemperatureFitMethod,
 )
+from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
-    DIMENSIONLESS_SYSTEM_1D,
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
     PeriodicCaldeiraLeggettEnvironment,
@@ -18,7 +19,6 @@ from adsorbate_simulation.system import (
 )
 from adsorbate_simulation.util import (
     get_eigenvalue_occupation_hermitian,
-    run_simulation,
     spaced_time_basis,
 )
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # to a Boltzmann distribution and observe the implied temperature of the simulation.
     # This implied temperature can then be plotted against the actual temperature
     condition = SimulationCondition(
-        DIMENSIONLESS_SYSTEM_1D,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(shape=(3,), resolution=(45,)),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     implied_temperatures = list[float]()
     for temperature in temperatures:
         condition = condition.with_temperature(temperature)
-        states = run_simulation(condition, times)
+        states = run_stochastic_simulation(condition, times)
 
         states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
         average_occupation, std_occupation = state.get_average_occupations(states)

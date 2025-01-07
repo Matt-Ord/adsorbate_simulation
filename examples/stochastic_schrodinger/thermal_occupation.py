@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore unknown
 from slate import array, linalg, plot
 from slate_quantum import state
 
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.fit import (
     TemperatureFitInfo,
     TemperatureFitMethod,
 )
+from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
-    DIMENSIONLESS_SYSTEM_1D,
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
     PeriodicCaldeiraLeggettEnvironment,
@@ -18,18 +21,23 @@ from adsorbate_simulation.system import (
 )
 from adsorbate_simulation.util import (
     get_eigenvalue_occupation_hermitian,
-    run_simulation,
     spaced_time_basis,
 )
+
+
+def _out_path(filename: str) -> Path:
+    name = Path(__file__).stem + "." + filename
+    return Path(__file__).parent / "out" / name
+
 
 if __name__ == "__main__":
     # When we perform a simulation, we need to make sure we recover the
     # correct thermal occupation of the states.
     condition = SimulationCondition(
-        DIMENSIONLESS_SYSTEM_1D,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
-                shape=(3,), resolution=(55,), truncation=(3 * 45,)
+                shape=(4,), resolution=(55,), truncation=(4 * 45,)
             ),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
             temperature=10 / Boltzmann,
@@ -55,12 +63,13 @@ if __name__ == "__main__":
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
     line.set_marker("x")
+    fig.savefig(_out_path("expected.png"))
     fig.show()
 
     # Now we can test the thermal occupation of the states in our
     # periodic environment.
-    times = spaced_time_basis(n=1000, dt=1 * np.pi * hbar)
-    states = run_simulation(condition, times)
+    times = spaced_time_basis(n=2000, dt=1 * np.pi * hbar)
+    states = run_stochastic_simulation(condition, times)
     states = state.normalize_states(states)
     states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
 
@@ -78,6 +87,7 @@ if __name__ == "__main__":
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
     line.set_marker("x")
+    fig.savefig(_out_path("actual.png"))
     fig.show()
 
     # Just how close are the fitted temperatures to the actual temperatures?
@@ -110,5 +120,7 @@ if __name__ == "__main__":
     )
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
+    fig.savefig(_out_path("fitted.png"))
     fig.show()
+
     input()
