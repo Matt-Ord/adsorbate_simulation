@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from slate.util import cached
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from slate.metadata import Metadata2D, SpacedVolumeMetadata
 
     from adsorbate_simulation.system import (
-        FreePotential,
         IsotropicSimulationConfig,
         SimulationCondition,
         System,
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 
 
 def _get_simulation_path[M: TimeMetadata](
-    condition: SimulationCondition[System[FreePotential], IsotropicSimulationConfig],
+    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
     times: Basis[M, np.complexfloating],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
@@ -37,7 +36,7 @@ def _get_simulation_path[M: TimeMetadata](
 
 @cached(_get_simulation_path)
 def run_stochastic_simulation[M: TimeMetadata](
-    condition: SimulationCondition[System[FreePotential], IsotropicSimulationConfig],
+    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
     times: Basis[M, np.complexfloating],
 ) -> StateList[Metadata2D[SimpleMetadata, M, None], SpacedVolumeMetadata]:
     """Run a stochastic simulation."""
@@ -47,8 +46,10 @@ def run_stochastic_simulation[M: TimeMetadata](
     )
 
     environment_operators = condition.temperature_corrected_operators
+    # TODO: specify initial state strategy in config
+    width = condition.system.cell.lengths[0] / 2
     initial_state = state.build_coherent_state(
-        hamiltonian.basis.metadata()[0], (0,), (0,), (np.pi,)
+        hamiltonian.basis.metadata()[0], (0,), (0,), (width,)
     )
 
     return solve_stochastic_schrodinger_equation_banded(
