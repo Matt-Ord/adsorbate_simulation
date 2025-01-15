@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.signal  # type: ignore stubs
-from scipy.constants import Boltzmann, hbar  # type: ignore stubs
+from scipy.constants import Boltzmann  # type: ignore stubs
 from slate import (
     Array,
     BasisMetadata,
@@ -67,13 +67,8 @@ def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
     condition: SimulationCondition[Any, Any],
 ) -> float:
     """Get the rate of displacement of a free particle."""
-    return (
-        2
-        * Boltzmann
-        * condition.temperature
-        * condition.mass
-        / (condition.eta * hbar**2)
-    )
+    gamma = condition.eta / (condition.mass * 2)
+    return 2 * Boltzmann * condition.temperature / gamma
 
 
 def get_free_displacements[M: TimeMetadata](

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
         SpacedLengthMetadata,
         SpacedVolumeMetadata,
     )
+    from slate_quantum.metadata import RepeatedVolumeMetadata
     from slate_quantum.noise import (
         DiagonalNoiseOperatorList,
         NoiseOperatorList,
@@ -55,10 +56,12 @@ class SimulationCondition[
     def hamiltonian(
         self,
     ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
-        return self.system.get_hamiltonian(self.config.simulation_basis)
+        system_hamiltonian = self.system.get_hamiltonian(self.config.simulation_basis)
+        shift = self.config.get_hamiltonian_shift(system_hamiltonian)
+        return system_hamiltonian + shift
 
     @property
-    def fundamental_metadata(self) -> SpacedVolumeMetadata:
+    def fundamental_metadata(self) -> RepeatedVolumeMetadata:
         return self.config.simulation_basis.get_fundamental_metadata(self.system.cell)
 
     @overload

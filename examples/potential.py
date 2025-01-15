@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # The potential is an Operator which is diagonal in position basis
     # Here .as_outer() is used to get the potential as an array of points along the diagonal
     potential = system.get_potential(basis)
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     line.set_color("black")
     line.set_linestyle("--")
     line.set_alpha(0.5)
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     initial_state = state.build_coherent_state(
         system.get_hamiltonian(basis).basis.metadata()[0], (2e-10,), (0,), (1e-11,)
     )
-    _, _, _ = plot.basis_against_array_1d_x(initial_state, measure="abs", ax=ax.twinx())
+    _, _, _ = plot.array_against_axes_1d(initial_state, measure="abs", ax=ax.twinx())
 
     fig.show()
-    input()
+    plot.wait_for_close()

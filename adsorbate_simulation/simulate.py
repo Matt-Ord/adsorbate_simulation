@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 from slate.util import cached
 from slate_quantum import StateList, state
 from slate_quantum.dynamics import solve_stochastic_schrodinger_equation_banded
@@ -16,6 +15,7 @@ from slate_quantum.metadata import (
 from adsorbate_simulation.system._condition import SimulationCondition
 
 if TYPE_CHECKING:
+    import numpy as np
     from slate import Basis, SimpleMetadata
     from slate.metadata import Metadata2D, SpacedVolumeMetadata
 
@@ -44,10 +44,9 @@ def run_stochastic_simulation[M: TimeMetadata](
     hamiltonian = hamiltonian.with_basis(
         condition.config.simulation_basis.get_operator_basis(condition.system.cell)
     )
-
     environment_operators = condition.temperature_corrected_operators
-    # TODO: specify initial state strategy in config
-    width = condition.system.cell.lengths[0] / 2
+    # TODO: specify initial state strategy in config  # noqa: FIX002
+    width = condition.system.cell.lengths[0] / 6
     initial_state = state.build_coherent_state(
         hamiltonian.basis.metadata()[0], (0,), (0,), (width,)
     )

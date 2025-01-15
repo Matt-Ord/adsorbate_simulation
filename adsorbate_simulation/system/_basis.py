@@ -11,10 +11,12 @@ from slate.metadata import (
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
 )
+from slate_quantum import metadata
 
 if TYPE_CHECKING:
     import numpy as np
     from slate.basis import Basis
+    from slate_quantum.metadata import RepeatedVolumeMetadata
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,16 +74,10 @@ class SimulationBasis(ABC):
         """Get the basis for the repeat cell of the simulation."""
         return basis.from_metadata(self.get_repeat_metadata(cell))
 
-    def get_fundamental_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:
+    def get_fundamental_metadata(self, cell: SimulationCell) -> RepeatedVolumeMetadata:
         """Get the metadata for the fundamental cell of the simulation."""
-        return StackedMetadata(
-            tuple(
-                SpacedLengthMetadata(s * r, spacing=LabelSpacing(delta=delta * s))
-                for (s, r, delta) in zip(
-                    self.shape, self.resolution, cell.lengths, strict=False
-                )
-            ),
-            cell.directions,
+        return metadata.repeat_volume_metadata(
+            self.get_repeat_metadata(cell), self.shape
         )
 
     def get_fundamental_basis(
@@ -99,11 +95,11 @@ class SimulationBasis(ABC):
         None,
     ]:
         """Get the basis for the simulation."""
-        state_basis = self.get_state_basis(cell)
+        state_basis = self.get_simulation_basis(cell)
         return tuple_basis((state_basis, state_basis.dual_basis()))
 
     @abstractmethod
-    def get_state_basis(
+    def get_simulation_basis(
         self, cell: SimulationCell
     ) -> Basis[SpacedVolumeMetadata, np.complex128]:
         """Get the basis for the simulation."""
@@ -116,19 +112,16 @@ class FundamentalSimulationBasis(SimulationBasis):
     def with_resolution(
         self, resolution: tuple[int, ...]
     ) -> FundamentalSimulationBasis:
-        """Create a new basis with a different resolution."""
         return type(self)(shape=self.shape, resolution=resolution)
 
     @override
     def with_shape(self, shape: tuple[int, ...]) -> FundamentalSimulationBasis:
-        """Create a new basis with a different shape."""
         return type(self)(shape=shape, resolution=self.resolution)
 
     @override
-    def get_state_basis(
+    def get_simulation_basis(
         self, cell: SimulationCell
     ) -> Basis[SpacedVolumeMetadata, np.complex128]:
-        """Get the basis for the simulation."""
         return self.get_fundamental_basis(cell)
 
 
@@ -141,12 +134,10 @@ class MomentumSimulationBasis(SimulationBasis):
 
     @override
     def with_resolution(self, resolution: tuple[int, ...]) -> MomentumSimulationBasis:
-        """Create a new basis with a different resolution."""
         return type(self)(shape=self.shape, resolution=resolution)
 
     @override
     def with_shape(self, shape: tuple[int, ...]) -> MomentumSimulationBasis:
-        """Create a new basis with a different shape."""
         return type(self)(shape=shape, resolution=self.resolution)
 
     def with_truncation(self, truncation: tuple[int, ...]) -> MomentumSimulationBasis:
@@ -156,11 +147,10 @@ class MomentumSimulationBasis(SimulationBasis):
         )
 
     @override
-    def get_state_basis(
+    def get_simulation_basis(
         self, cell: SimulationCell
     ) -> Basis[SpacedVolumeMetadata, np.complex128]:
-        """Get the basis for the simulation."""
-        fundamental = self.get_fundamental_basis(cell)
+        fundamental = self.get_fundamental_metadata(cell)
         truncation = self.truncation or fundamental.shape
 
         return tuple_basis(
@@ -169,16 +159,7 @@ class MomentumSimulationBasis(SimulationBasis):
                     s,
                     basis.TransformedBasis(basis.FundamentalBasis(m)),
                 )
-                for s, m in zip(
-                    truncation, fundamental.metadata().children, strict=False
-                )
+                for s, m in zip(truncation, fundamental.children, strict=False)
             ),
-            fundamental.metadata().extra,
-        )
-
-        return basis.with_modified_children(
-            basis.fundamental_transformed_tuple_basis_from_metadata(
-                fundamental.metadata(), is_dual=fundamental.is_dual
-            ),
-            lambda i, b: basis.CroppedBasis(truncation[i], b),
+            fundamental.extra,
         )

@@ -8,15 +8,13 @@ import numpy as np
 from slate import basis as _basis
 from slate import tuple_basis
 from slate.basis import diagonal_basis
-from slate_quantum.metadata import eigenvalue_basis
+from slate_quantum.metadata import RepeatedVolumeMetadata, eigenvalue_basis
 from slate_quantum.noise import (
     DiagonalNoiseOperatorList,
     IsotropicNoiseKernel,
     NoiseKernel,
     NoiseOperatorList,
-    build_periodic_caldeira_leggett_operators,
-    build_periodic_caldeira_leggett_real_operators,
-    get_temperature_corrected_operators,
+    build,
 )
 from slate_quantum.operator import OperatorList
 
@@ -44,10 +42,17 @@ class Environment(ABC):
         temperature: float,
     ) -> NoiseOperatorList[SpacedVolumeMetadata]:
         metadata = (hamiltonian.basis.metadata())[0]
-        operators = get_temperature_corrected_operators(
+        operators = build.temperature_corrected_operators(
             hamiltonian, self.get_operators(metadata), temperature, self.eta
         )
         return operators.with_operator_basis(_basis.as_tuple_basis(operators.basis)[1])
+
+    def get_hamiltonian_shift(
+        self, hamiltonian: Operator[SpacedVolumeMetadata, np.complexfloating]
+    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
+        return build.hamiltonian_shift(
+            hamiltonian, self.get_operators(hamiltonian.basis.metadata()[0]), self.eta
+        )
 
     def get_noise_kernel(
         self, metadata: SpacedVolumeMetadata
@@ -123,8 +128,7 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
     def get_operators(
         self, metadata: SpacedVolumeMetadata
     ) -> DiagonalNoiseOperatorList[SpacedVolumeMetadata]:
-        operators = build_periodic_caldeira_leggett_operators(metadata)
-        operators = build_periodic_caldeira_leggett_real_operators(metadata)
+        operators = build.real_periodic_caldeira_leggett_operators(metadata)
         return operators.with_operator_basis(operators.basis[1].inner)
 
 
@@ -209,7 +213,7 @@ class SimulationConfig:
             target_delta=target_delta,
         )
 
-    def get_fundamental_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:
+    def get_fundamental_metadata(self, cell: SimulationCell) -> RepeatedVolumeMetadata:
         return self.simulation_basis.get_fundamental_metadata(cell)
 
     def get_temperature_corrected_operators(
@@ -218,6 +222,11 @@ class SimulationConfig:
         return self.environment.get_temperature_corrected_operators(
             hamiltonian, self.temperature
         )
+
+    def get_hamiltonian_shift(
+        self, hamiltonian: Operator[SpacedVolumeMetadata, np.complexfloating]
+    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
+        return self.environment.get_hamiltonian_shift(hamiltonian)
 
 
 class ClosedSimulationConfig(SimulationConfig):
