@@ -126,9 +126,10 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
         r"""Create a new environment with different friction \eta."""
         return type(self)(_eta=eta)
 
-    def from_gamma(self, gamma: float, mass: float) -> Self:
+    @classmethod
+    def from_gamma(cls, gamma: float, mass: float) -> Self:
         r"""Create a new environment with different damping \gamma."""
-        return type(self)(_eta=eta_from_gamma(gamma, mass))
+        return cls(_eta=eta_from_gamma(gamma, mass))
 
     @override
     def get_operators(
