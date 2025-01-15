@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore library
-from slate import array, plot
+from slate import plot
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
@@ -30,26 +30,26 @@ if __name__ == "__main__":
         DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
-                shape=(3,), resolution=(45,), truncation=(3 * 35,)
+                shape=(2,), resolution=(55,), truncation=(2 * 45,)
             ),
-            environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
+            environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
         ),
     )
-    times = spaced_time_basis(n=1000, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=10000, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
 
     # The periodic position is the position of the wavepacket
     # in the simulation basis which is periodic.
     fig, ax = plot.get_figure()
     positions = get_periodic_position(states, axis=0)[0, slice(None)]
-    _, _, line = plot.basis_against_array(positions, measure="real", ax=ax)
+    _, _, line = plot.array_against_basis(positions, measure="real", ax=ax)
     line.set_label("Periodic position")
 
     # To calculate the restored position, we can identify the periodic
     # discontinuities in the periodic data to 'unwrap' the wavepacket.
     positions = get_restored_position(states, axis=0)[0, slice(None)]
-    _, _, line = plot.basis_against_array(positions, measure="real", ax=ax)
+    _, _, line = plot.array_against_basis(positions, measure="real", ax=ax)
     line.set_label("Restored position")
 
     ax.set_ylabel("Position (a.u.)")
@@ -61,14 +61,12 @@ if __name__ == "__main__":
     # Given the position of the wavepacket, we can calculate the displacement
     # of the wavepacket against time.
     fig, ax = plot.get_figure()
-    displacements = array.sqrt(
-        get_restored_displacements(states, axis=0)[0, slice(None)]
-    )
-    _, _, line = plot.basis_against_array(displacements, measure="real", ax=ax)
+    displacements = get_restored_displacements(states, axis=0)[0, slice(None)]
+    _, _, line = plot.array_against_basis(displacements, measure="real", ax=ax)
     line.set_label("Restored displacement")
 
     free_displacements = get_free_displacements(condition, times.metadata())
-    _, _, line = plot.basis_against_array(free_displacements, measure="real", ax=ax)
+    _, _, line = plot.array_against_basis(free_displacements, measure="real", ax=ax)
     line.set_label("Free displacement")
 
     ax.set_title("Displacement of the wavepacket against time")
@@ -76,4 +74,5 @@ if __name__ == "__main__":
     ax.set_ylabel("Displacement (a.u.)")
     ax.legend()
     fig.show()
-    input()
+
+    plot.wait_for_close()

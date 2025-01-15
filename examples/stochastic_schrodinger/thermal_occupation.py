@@ -37,13 +37,12 @@ if __name__ == "__main__":
         DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
-                shape=(4,), resolution=(55,), truncation=(4 * 45,)
+                shape=(2,), resolution=(55,), truncation=(2 * 45,)
             ),
-            environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
+            environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
         ),
     )
-
     # For a system in thermal equilibrium, the probability of a state
     # being occupied is given by the Boltzmann distribution.
     # We need to make sure to include enough states such that the
@@ -58,17 +57,18 @@ if __name__ == "__main__":
     target_occupation = get_eigenvalue_occupation_hermitian(
         diagonal_hamiltonian, condition.config.temperature
     )
-    fig, ax, line = plot.basis_against_array(target_occupation)
+    fig, ax, line = plot.array_against_basis(target_occupation)
     ax.set_title("Thermal occupation of the states")
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
     line.set_marker("x")
     fig.savefig(_out_path("expected.png"))
     fig.show()
+    plot.wait_for_close()
 
     # Now we can test the thermal occupation of the states in our
     # periodic environment.
-    times = spaced_time_basis(n=2000, dt=1 * np.pi * hbar)
+    times = spaced_time_basis(n=10000, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
     states = state.normalize_states(states)
     states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     # We see that the true occupation of the states is close to the
     # expected thermal occupation.
     fig, ax = plot.get_figure()
-    _, _, line = plot.basis_against_array(target_occupation, ax=ax)
-    _, _, line = plot.basis_against_array(
+    _, _, line = plot.array_against_basis(target_occupation, ax=ax)
+    _, _, line = plot.array_against_basis(
         average_occupation, y_error=std_occupation, ax=ax
     )
     ax.set_title("True occupation of the states")
@@ -105,11 +105,11 @@ if __name__ == "__main__":
     )
 
     fig, ax = plot.get_figure()
-    _, _, line = plot.basis_against_array(fitted_occupation, ax=ax, scale="log")
+    _, _, line = plot.array_against_basis(fitted_occupation, ax=ax, scale="log")
     line.set_label(f"Fitted ({implied_temperature * Boltzmann:.2e})")
-    _, _, line = plot.basis_against_array(target_occupation, ax=ax, scale="log")
+    _, _, line = plot.array_against_basis(target_occupation, ax=ax, scale="log")
     line.set_label(f"Actual ({condition.temperature * Boltzmann:.2e})")
-    _, _, line = plot.basis_against_array(
+    _, _, line = plot.array_against_basis(
         average_occupation, y_error=std_occupation, ax=ax, scale="log"
     )
     line.set_label("Average")
@@ -123,4 +123,4 @@ if __name__ == "__main__":
     fig.savefig(_out_path("fitted.png"))
     fig.show()
 
-    input()
+    plot.wait_for_close()

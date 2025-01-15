@@ -55,7 +55,7 @@ class CosPotential(SimulationPotential):
         simulation_basis: SimulationBasis,
     ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         return operator.build.cos_potential(
-            simulation_basis.get_repeat_basis(cell).metadata(),
+            simulation_basis.get_repeat_metadata(cell),
             self.barrier_height,
         )
 
@@ -85,7 +85,7 @@ class FCCPotential(SimulationPotential):
         simulation_basis: SimulationBasis,
     ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
         return operator.build.fcc_potential(
-            simulation_basis.get_repeat_basis(cell).metadata(),
+            simulation_basis.get_repeat_metadata(cell),
             self.top_site_energy,
         )
 

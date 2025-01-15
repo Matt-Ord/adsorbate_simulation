@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.constants import hbar  # type: ignore lib
 from slate.metadata import AxisDirections
 
 from adsorbate_simulation.system._basis import SimulationCell
@@ -35,6 +36,6 @@ CU_1D_UNIT_CELL_ELENA = SimulationCell(
 
 
 DIMENSIONLESS_UNIT_CELL = SimulationCell(
-    lengths=(2 * np.pi,),
+    lengths=(2 * np.pi * hbar,),
     directions=CELL_DIRECTIONS_1D,
 )

@@ -30,9 +30,11 @@ if __name__ == "__main__":
     condition = SimulationCondition(
         DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
-            simulation_basis=MomentumSimulationBasis(shape=(3,), resolution=(45,)),
-            environment=PeriodicCaldeiraLeggettEnvironment(_eta=4 / 3**2),
-            temperature=10 / Boltzmann,
+            simulation_basis=MomentumSimulationBasis(
+                shape=(3,), resolution=(55,), truncation=(3 * 45,)
+            ),
+            environment=PeriodicCaldeiraLeggettEnvironment(_eta=8 * hbar / 3**2),
+            temperature=10 * hbar / Boltzmann,
         ),
     )
 
@@ -72,4 +74,4 @@ if __name__ == "__main__":
     _, _, line = plot.array_against_array(target, target, ax=ax)
     ax.set_xlim(0, None)
     fig.show()
-    input()
+    plot.wait_for_close()

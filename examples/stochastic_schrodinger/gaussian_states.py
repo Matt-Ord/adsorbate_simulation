@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # Using the e^{ikx} operator, we can calculate the position
     # of the wavepacket.
     positions = get_periodic_position(states, axis=0)
-    fig, ax, line = plot.basis_against_array(positions, measure="real")
+    fig, ax, line = plot.array_against_basis(positions, measure="real")
     ax.set_title("Displacement of the wavepacket against time")
     ax.set_xlabel("Time /s")
     ax.set_ylabel("Position (a.u.)")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # We can also calculate the width of the wavepacket
     # This remains almost constant over the course of the simulation.
     widths = get_gaussian_width(states, axis=0)
-    fig, ax, line = plot.basis_against_array(widths, measure="real")
+    fig, ax, line = plot.array_against_basis(widths, measure="real")
     ax.set_title("Width of the wavepacket against time")
     ax.set_xlabel("Time /s")
     ax.set_ylabel("Width (a.u.)")
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # The simulation is not periodic in momentum space, so we can use
     # the k operator directly to calculate the momentum of the wavepacket.
     momentums = get_momentum(states, axis=0)
-    fig, ax, line = plot.basis_against_array(momentums, measure="real")
+    fig, ax, line = plot.array_against_basis(momentums, measure="real")
     ax.set_title("Momentum of the wavepacket against time")
     ax.set_xlabel("Time /s")
     ax.set_ylabel("Momentum (a.u.)")
@@ -87,4 +87,4 @@ if __name__ == "__main__":
     ax.set_ylabel("Probability")
     fig.show()
 
-    input()
+    plot.wait_for_close()

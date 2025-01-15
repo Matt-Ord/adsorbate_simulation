@@ -24,7 +24,7 @@ if __name__ == "__main__":
     system = system.with_potential(system.potential.with_barrier_height(1.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_color("black")
@@ -45,4 +45,4 @@ if __name__ == "__main__":
     fig, _, _anim0 = animate_data_over_list_1d_x(states, measure="real", ax=ax.twinx())
     fig.show()
 
-    input()
+    plot.wait_for_close()
