@@ -18,6 +18,8 @@ from slate_quantum.noise import (
 )
 from slate_quantum.operator import OperatorList
 
+from adsorbate_simulation.util import eta_from_gamma
+
 if TYPE_CHECKING:
     from slate.metadata import SpacedVolumeMetadata
     from slate_quantum import Operator
@@ -123,6 +125,10 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
     def with_eta(self, eta: float) -> Self:
         r"""Create a new environment with different friction \eta."""
         return type(self)(_eta=eta)
+
+    def from_gamma(self, gamma: float, mass: float) -> Self:
+        r"""Create a new environment with different damping \gamma."""
+        return type(self)(_eta=eta_from_gamma(gamma, mass))
 
     @override
     def get_operators(

@@ -63,11 +63,21 @@ def spaced_time_basis(*, n: int, dt: float) -> FundamentalBasis[SpacedTimeMetada
     return FundamentalBasis(SpacedTimeMetadata(n, spacing=LabelSpacing(delta=n * dt)))
 
 
+def gamma_from_eta(eta: float, mass: float) -> float:
+    """Get the damping coefficient from the friction and mass."""
+    return eta / (mass * 2)
+
+
+def eta_from_gamma(gamma: float, mass: float) -> float:
+    """Get the friction coefficient from the damping and mass."""
+    return gamma * mass * 2
+
+
 def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
     condition: SimulationCondition[Any, Any],
 ) -> float:
     """Get the rate of displacement of a free particle."""
-    gamma = condition.eta / (condition.mass * 2)
+    gamma = gamma_from_eta(condition.eta, condition.mass)
     return 2 * Boltzmann * condition.temperature / gamma
 
 
