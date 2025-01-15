@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from adsorbate_simulation.constants.lattice import (
+    CU_1D_UNIT_CELL_ELENA,
     CU_111_1D_UNIT_CELL,
     DIMENSIONLESS_UNIT_CELL,
 )
@@ -27,6 +28,7 @@ from adsorbate_simulation.constants.system import (
 )
 
 __all__ = [
+    "CU_1D_UNIT_CELL_ELENA",
     "CU_111_1D_UNIT_CELL",
     "DIMENSIONLESS_1D_SYSTEM",
     "DIMENSIONLESS_MASS",
