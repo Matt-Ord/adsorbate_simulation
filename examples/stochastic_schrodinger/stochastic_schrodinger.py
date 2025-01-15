@@ -34,8 +34,6 @@ if __name__ == "__main__":
             target_delta=0.5e-5,
         ),
     )
-    gamma = condition.eta / (condition.mass * 2)
-    print(1 / gamma, 0.1 * np.pi * hbar)
 
     # We simulate the system using the stochastic Schrodinger equation.
     # We find a localized stochastic evolution of the wavepacket.
