@@ -7,6 +7,8 @@ from adsorbate_simulation.system._config import IsotropicSimulationConfig
 
 if TYPE_CHECKING:
     import numpy as np
+    from slate import Basis
+    from slate.basis import TupleBasis2D
     from slate.metadata import (
         AxisDirections,
         SpacedLengthMetadata,
@@ -109,3 +111,19 @@ class SimulationCondition[
     def eta(self) -> float:
         """The friction coefficient of the system."""
         return self.config.environment.eta
+
+    @property
+    def simulation_basis(self) -> Basis[SpacedVolumeMetadata, np.complex128]:
+        return self.config.simulation_basis.get_simulation_basis(self.system.cell)
+
+    @property
+    def operator_basis(
+        self,
+    ) -> TupleBasis2D[
+        np.complexfloating,
+        Basis[SpacedVolumeMetadata, np.complex128],
+        Basis[SpacedVolumeMetadata, np.complex128],
+        None,
+    ]:
+        """The simulation basis of the simulation."""
+        return self.config.simulation_basis.get_operator_basis(self.system.cell)

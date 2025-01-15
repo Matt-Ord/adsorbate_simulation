@@ -39,9 +39,7 @@ def run_stochastic_simulation[M: TimeMetadata](
 ) -> StateList[Metadata2D[SimpleMetadata, M, None], SpacedVolumeMetadata]:
     """Run a stochastic simulation."""
     hamiltonian = condition.hamiltonian
-    hamiltonian = hamiltonian.with_basis(
-        condition.config.simulation_basis.get_operator_basis(condition.system.cell)
-    )
+    hamiltonian = hamiltonian.with_basis(condition.operator_basis)
     environment_operators = condition.temperature_corrected_operators
     # TODO: specify initial state strategy in config  # noqa: FIX002
     width = condition.system.cell.lengths[0] / 6
