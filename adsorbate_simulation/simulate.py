@@ -12,8 +12,6 @@ from slate_quantum.metadata import (
     TimeMetadata,
 )
 
-from adsorbate_simulation.system._condition import SimulationCondition
-
 if TYPE_CHECKING:
     import numpy as np
     from slate import Basis, SimpleMetadata
