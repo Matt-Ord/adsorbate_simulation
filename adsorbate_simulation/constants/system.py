@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from adsorbate_simulation.constants.lattice import (
+    CU_1D_UNIT_CELL_ELENA,
     CU_111_1D_UNIT_CELL,
     CU_111_2D_UNIT_CELL,
     DIMENSIONLESS_UNIT_CELL,
@@ -16,6 +17,7 @@ from adsorbate_simulation.constants.potential import (
     LI_CU_COS_POTENTIAL,
     NA_CU_111_2D_POTENTIAL,
     NA_CU_COS_POTENTIAL,
+    NA_CU_COS_POTENTIAL_ELENA,
 )
 from adsorbate_simulation.system._system import System
 
@@ -42,6 +44,13 @@ NA_CU_111_1D_SYSTEM = System(
     NA_CU_COS_POTENTIAL,
     CU_111_1D_UNIT_CELL,
 )
+
+NA_CU_111_1D_SYSTEM_ELENA = System(
+    SODIUM_MASS,
+    NA_CU_COS_POTENTIAL_ELENA,
+    CU_1D_UNIT_CELL_ELENA,
+)
+
 
 NA_CU_111_2D_SYSTEM = System(
     SODIUM_MASS,
