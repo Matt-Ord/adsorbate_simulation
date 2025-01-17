@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 from slate import metadata
 from slate.util import cached
 from slate_quantum import StateList, state
@@ -14,7 +15,6 @@ from slate_quantum.metadata import (
 )
 
 if TYPE_CHECKING:
-    import numpy as np
     from slate import Basis, SimpleMetadata
     from slate.metadata import Metadata2D, SpacedVolumeMetadata
 

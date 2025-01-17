@@ -34,9 +34,10 @@ if __name__ == "__main__":
             ),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
+            target_delta=0.5e-5,
         ),
     )
-    times = spaced_time_basis(n=10000, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=20000, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
 
     # The periodic position is the position of the wavepacket
