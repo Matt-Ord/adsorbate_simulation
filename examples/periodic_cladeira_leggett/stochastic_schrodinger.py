@@ -9,7 +9,7 @@ from slate.plot import (
 )
 from slate_quantum import dynamics, state
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
@@ -24,14 +24,14 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        DIMENSIONLESS_1D_FREE_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(2,), resolution=(55,), truncation=(2 * 45,)
             ),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
-            target_delta=0.5e-5,
+            target_delta=1e-3,
         ),
     )
 

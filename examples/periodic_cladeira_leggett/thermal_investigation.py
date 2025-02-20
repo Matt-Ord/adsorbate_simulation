@@ -5,7 +5,7 @@ from scipy.constants import Boltzmann, hbar  # type: ignore lib
 from slate import Array, array, plot
 from slate_quantum import operator, state
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
 from adsorbate_simulation.fit import (
     TemperatureFitInfo,
     TemperatureFitMethod,
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # to a Boltzmann distribution and observe the implied temperature of the simulation.
     # This implied temperature can then be plotted against the actual temperature
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        DIMENSIONLESS_1D_FREE_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(3,), resolution=(55,), truncation=(3 * 45,)

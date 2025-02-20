@@ -9,7 +9,7 @@ from slate_quantum.dynamics import (
     solve_schrodinger_equation_decomposition,
 )
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     ClosedEnvironment,
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        DIMENSIONLESS_1D_FREE_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=FundamentalSimulationBasis(shape=(3,), resolution=(25,)),
             environment=ClosedEnvironment(),

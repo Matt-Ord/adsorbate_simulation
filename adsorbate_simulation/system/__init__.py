@@ -10,6 +10,7 @@ from adsorbate_simulation.system._basis import (
 )
 from adsorbate_simulation.system._condition import SimulationCondition
 from adsorbate_simulation.system._config import (
+    CaldeiraLeggettEnvironment,
     ClosedEnvironment,
     Environment,
     IsotropicSimulationConfig,
@@ -26,6 +27,7 @@ from adsorbate_simulation.system._system import (
 )
 
 __all__ = [
+    "CaldeiraLeggettEnvironment",
     "ClosedEnvironment",
     "CosPotential",
     "Environment",
