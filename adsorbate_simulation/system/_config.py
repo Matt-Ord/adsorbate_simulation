@@ -114,6 +114,32 @@ class ClosedEnvironment(IsotropicEnvironment):
 
 
 @dataclass(frozen=True, kw_only=True)
+class CaldeiraLeggettEnvironment(IsotropicEnvironment):
+    _eta: float = field(default=0, kw_only=True)
+
+    @property
+    @override
+    def eta(self) -> float:
+        return self._eta
+
+    def with_eta(self, eta: float) -> Self:
+        r"""Create a new environment with different friction \eta."""
+        return type(self)(_eta=eta)
+
+    @classmethod
+    def from_gamma(cls, gamma: float, mass: float) -> Self:
+        r"""Create a new environment with different damping \gamma."""
+        return cls(_eta=eta_from_gamma(gamma, mass))
+
+    @override
+    def get_operators(
+        self, metadata: SpacedVolumeMetadata
+    ) -> DiagonalNoiseOperatorList[SpacedVolumeMetadata]:
+        operators = build.caldeira_leggett_operators(metadata)
+        return operators.with_operator_basis(operators.basis[1].inner)
+
+
+@dataclass(frozen=True, kw_only=True)
 class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
     _eta: float = field(default=0, kw_only=True)
 
@@ -236,14 +262,6 @@ class SimulationConfig:
         return self.environment.get_hamiltonian_shift(hamiltonian)
 
 
-class ClosedSimulationConfig(SimulationConfig):
-    environment: ClosedEnvironment = field(
-        default_factory=ClosedEnvironment, kw_only=True
-    )
-
-
 @dataclass(frozen=True, kw_only=True)
 class IsotropicSimulationConfig(SimulationConfig):
-    environment: IsotropicEnvironment = field(
-        default_factory=IsotropicEnvironment, kw_only=True
-    )
+    environment: IsotropicEnvironment = field(default_factory=ClosedEnvironment)

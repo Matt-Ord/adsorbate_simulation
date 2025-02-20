@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
 from slate import array, basis, plot
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
 from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        DIMENSIONLESS_1D_FREE_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(3,), resolution=(45,), truncation=(3 * 35,)
@@ -27,9 +27,7 @@ if __name__ == "__main__":
         ),
     )
     # The Hamiltonian is diagonal in momentum basis
-    hamiltonian = condition.hamiltonian.with_basis(
-        condition.config.simulation_basis.get_operator_basis(condition.system.cell)
-    )
+    hamiltonian = condition.hamiltonian.with_basis(condition.operator_basis)
     fig, ax, _ = plot.array_against_axes_2d_k(
         array.flatten(hamiltonian), measure="real"
     )
@@ -59,7 +57,7 @@ if __name__ == "__main__":
     # and compare them to the original operators.
     original_operator = environment_operators[0, :]
     corrected_operator = condition.temperature_corrected_operators[0, :].with_basis(
-        condition.config.simulation_basis.get_operator_basis(condition.system.cell)
+        condition.operator_basis
     )
     # The original operator is a simple scatter from k -> k + \kappa
     # Each scatter has the same probability, and we only see occupation of
@@ -91,7 +89,7 @@ if __name__ == "__main__":
     # The equivalent plot for the second operator, we see an increase in the negative k region.
     # In both cases we are more likely to scatter to states with lower energy.
     corrected_operator = condition.temperature_corrected_operators[1, :].with_basis(
-        condition.config.simulation_basis.get_operator_basis(condition.system.cell)
+        condition.operator_basis
     )
     fig, ax, _ = plot.array_against_axes_2d_k(
         array.flatten(corrected_operator), measure="abs"

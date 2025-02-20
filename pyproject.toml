@@ -8,15 +8,15 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "numpy >=2.0.0,<3.0.0",
     "scipy >=1.14.1,<2.0.0",
-    "slate @ git+https://github.com/Matt-Ord/slate.git@6ce9040",
-    "slate_quantum[sse_solver_py] @ git+https://github.com/Matt-Ord/slate_quantum.git@aafa0fc1de1812a173f4796c92b5515b8868b0f4",
+    "slate @ git+https://github.com/Matt-Ord/slate.git@b22c85f",
+    "slate_quantum[sse_solver_py] @ git+https://github.com/Matt-Ord/slate_quantum.git@1b13584",
 ]
 
 [dependency-groups]
 dev = [
     "ruff",
     "pytest >=8.3.3,<9.0.0",
-    "pyright ==1.1.392",
+    "pyright ==1.1.394",
     "sphinx >=8.1.3,<9.0.0",
     "pydata-sphinx-theme >=0.16.0,<0.17.0",
 ]
@@ -68,10 +68,6 @@ typeCheckingMode = "strict"
 include = ["tests", "adsorbate_simulation", "examples"]
 reportImplicitOverride = true
 
-# [tool.uv]
-# override-dependencies = [
-#     "sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git@3193c492fb25610209c1c7d7692d78e348a0ce54#subdirectory=sse_solver_py",
-# ]
 
 [build-system]
 requires = ["setuptools"]

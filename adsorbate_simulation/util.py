@@ -76,7 +76,7 @@ def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
 ) -> float:
     """Get the rate of displacement of a free particle."""
     gamma = gamma_from_eta(condition.eta, condition.mass)
-    return 2 * Boltzmann * condition.temperature / gamma
+    return 2 * Boltzmann * condition.temperature / (gamma * np.sqrt(2))
 
 
 def get_free_displacements[M: TimeMetadata](

@@ -7,7 +7,7 @@ from scipy.constants import Boltzmann, hbar  # type: ignore unknown
 from slate import array, linalg, plot
 from slate_quantum import state
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
 from adsorbate_simulation.fit import (
     TemperatureFitInfo,
     TemperatureFitMethod,
@@ -34,14 +34,14 @@ if __name__ == "__main__":
     # When we perform a simulation, we need to make sure we recover the
     # correct thermal occupation of the states.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        DIMENSIONLESS_1D_FREE_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(2,), resolution=(55,), truncation=(2 * 45,)
             ),
             environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
-            target_delta=0.5e-5,
+            target_delta=2e-3,
         ),
     )
     # For a system in thermal equilibrium, the probability of a state
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # Now we can test the thermal occupation of the states in our
     # periodic environment.
-    times = spaced_time_basis(n=20000, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=2000, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
     states = state.normalize_states(states)
     states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
