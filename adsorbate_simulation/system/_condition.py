@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         SpacedLengthMetadata,
         SpacedVolumeMetadata,
     )
+    from slate_quantum import State
     from slate_quantum.metadata import RepeatedVolumeMetadata
     from slate_quantum.noise import (
         DiagonalNoiseOperatorList,
@@ -33,13 +34,13 @@ class SimulationCondition[
     system: S
     config: C
 
-    def with_system[_S: System[Any]](self, system: _S) -> SimulationCondition[_S, C]:
+    def with_system[S_: System[Any]](self, system: S_) -> SimulationCondition[S_, C]:
         """Create a new condition with different system."""
         return SimulationCondition(system, self.config)
 
-    def with_config[_C: SimulationConfig](
-        self, config: _C
-    ) -> SimulationCondition[S, _C]:
+    def with_config[C_: SimulationConfig](
+        self, config: C_
+    ) -> SimulationCondition[S, C_]:
         """Create a new condition with different config."""
         return SimulationCondition(self.system, config)
 
@@ -66,9 +67,12 @@ class SimulationCondition[
     def fundamental_metadata(self) -> RepeatedVolumeMetadata:
         return self.config.simulation_basis.get_fundamental_metadata(self.system.cell)
 
+    def get_initial_state(self) -> State[SpacedVolumeMetadata]:
+        return self.config.get_initial_state(self.system)
+
     @overload
-    def get_environment_operators[_C: IsotropicSimulationConfig](
-        self: SimulationCondition[Any, _C],
+    def get_environment_operators[C_: IsotropicSimulationConfig](
+        self: SimulationCondition[Any, C_],
     ) -> DiagonalNoiseOperatorList[SpacedVolumeMetadata]: ...
     @overload
     def get_environment_operators(

@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
 from slate import array, basis, plot
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
     MomentumSimulationBasis,
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_FREE_SYSTEM,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(3,), resolution=(45,), truncation=(3 * 35,)

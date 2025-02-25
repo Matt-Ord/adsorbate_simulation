@@ -155,11 +155,50 @@ class MomentumSimulationBasis(SimulationBasis):
 
         return tuple_basis(
             tuple(
-                basis.CroppedBasis(
-                    s,
-                    basis.TransformedBasis(basis.FundamentalBasis(m)),
-                )
+                basis.CroppedBasis(s, basis.TransformedBasis(basis.FundamentalBasis(m)))
                 for s, m in zip(truncation, fundamental.children, strict=False)
+            ),
+            fundamental.extra,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class PositionSimulationBasis(SimulationBasis):
+    """The truncated basis for a simulation."""
+
+    truncation: tuple[int, ...] | None = None
+    offset: tuple[int, ...] | None = None
+    """The number of states to truncate in each direction."""
+
+    @override
+    def with_resolution(self, resolution: tuple[int, ...]) -> PositionSimulationBasis:
+        return type(self)(shape=self.shape, resolution=resolution)
+
+    @override
+    def with_shape(self, shape: tuple[int, ...]) -> PositionSimulationBasis:
+        return type(self)(shape=shape, resolution=self.resolution)
+
+    def with_truncation(self, truncation: tuple[int, ...]) -> PositionSimulationBasis:
+        """Create a new basis with a different truncation."""
+        return type(self)(
+            shape=self.shape, resolution=self.resolution, truncation=truncation
+        )
+
+    @override
+    def get_simulation_basis(
+        self, cell: SimulationCell
+    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+        fundamental = self.get_fundamental_metadata(cell)
+        truncation = self.truncation or fundamental.shape
+        offset = self.offset or tuple(0 for _ in fundamental.shape)
+        children = fundamental.children
+
+        return tuple_basis(
+            tuple(
+                basis.TruncatedBasis(
+                    basis.Truncation(s, 1, o), basis.FundamentalBasis(m)
+                )
+                for s, o, m in zip(truncation, offset, children, strict=False)
             ),
             fundamental.extra,
         )

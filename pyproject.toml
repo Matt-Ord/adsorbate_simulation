@@ -8,8 +8,8 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "numpy >=2.0.0,<3.0.0",
     "scipy >=1.14.1,<2.0.0",
-    "slate @ git+https://github.com/Matt-Ord/slate.git@b22c85f",
-    "slate_quantum[sse_solver_py] @ git+https://github.com/Matt-Ord/slate_quantum.git@1b13584",
+    "slate @ git+https://github.com/Matt-Ord/slate.git@f5af344",
+    "slate_quantum[sse_solver_py] @ git+https://github.com/Matt-Ord/slate_quantum.git@166caef",
 ]
 
 [dependency-groups]
@@ -47,7 +47,8 @@ ignore = [
     "DOC402",
     "PD",
 ]
-
+fixable = ["ALL"]
+unfixable = ["T201"]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/**/*" = ["PLR6301", "PLC2701", "PLR0914", "D101", "D102", "D103", "D104"]

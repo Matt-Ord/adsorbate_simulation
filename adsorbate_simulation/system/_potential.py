@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
+import numpy as np
 from slate_quantum import operator
 
 if TYPE_CHECKING:
-    import numpy as np
     from slate.metadata import AxisDirections, SpacedLengthMetadata
     from slate_quantum.operator import Potential
 
@@ -95,3 +95,36 @@ class FreePotential(CosPotential):
 
     def __init__(self) -> None:
         super().__init__(barrier_height=0.0)
+
+
+@dataclass(frozen=True, kw_only=True)
+class HarmonicPotential(SimulationPotential):
+    """A potential with a harmonic potential shape."""
+
+    frequency: float
+
+    def with_frequency(self, frequency: float) -> HarmonicPotential:  # noqa: PLR6301
+        """Create a new system with different frequency."""
+        return HarmonicPotential(frequency=frequency)
+
+    def _potential_fn(
+        self,
+        lengths: tuple[float, ...],
+        points: tuple[np.ndarray[Any, np.dtype[np.floating]], ...],
+    ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
+        points = tuple((p % d) - d / 2 for p, d in zip(points, lengths, strict=True))
+        return (0.5 * self.frequency**2 * np.linalg.norm(points, axis=0) ** 2).astype(
+            np.complexfloating
+        )
+
+    @override
+    def get_repeat_potential(
+        self,
+        cell: SimulationCell,
+        simulation_basis: SimulationBasis,
+    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+        metadata = simulation_basis.get_repeat_metadata(cell)
+        return operator.build.potential_from_function(
+            metadata,
+            lambda x: self._potential_fn(cell.lengths, x),
+        )
