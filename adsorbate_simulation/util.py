@@ -285,6 +285,27 @@ def _calculate_total_offsset_multiplications_complex(
     return re_re - im_im + 1j * (re_im + im_re)
 
 
+def get_restored_scatter[
+    M0: BasisMetadata,
+    M1: SpacedLengthMetadata,
+    E: AxisDirections,
+](
+    states: StateList[M0, StackedMetadata[M1, E]],
+    k: tuple[float, ...],
+) -> Array[M0, np.complexfloating]:
+    r"""Get the restored scattering operator for a wavepacket.
+
+    For a gaussian wavepacket
+
+    \ket{\psi} = A \exp{(-\frac{{(x - x_0)}^2}{2 \sigma_0} + ik_0(x-x_0))} \ket{x}
+
+    the expectation is given by
+
+    \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}.
+    """
+    raise NotImplementedError
+
+
 def get_restored_isf[
     M0: BasisMetadata,
     M1: SpacedLengthMetadata,
