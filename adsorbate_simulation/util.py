@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.signal  # type: ignore stubs
-from scipy.constants import Boltzmann  # type: ignore stubs
+from scipy.constants import Boltzmann, hbar  # type: ignore stubs
 from slate import (
     Array,
     BasisMetadata,
@@ -21,18 +22,22 @@ from slate.metadata import (
     LabelSpacing,
     SpacedLengthMetadata,
 )
-from slate_quantum import StateList, operator, state
+from slate_quantum import operator
 from slate_quantum.metadata import (
     SpacedTimeMetadata,
     TimeMetadata,
 )
 
+from adsorbate_simulation.system._potential import HarmonicPotential
+
 if TYPE_CHECKING:
     from slate.metadata import Metadata2D
+    from slate_quantum import StateList
 
     from adsorbate_simulation.system import (
         SimulationCondition,
     )
+    from adsorbate_simulation.system._system import System
 
 
 def get_thermal_occupation(
@@ -79,6 +84,113 @@ def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
     return 2 * Boltzmann * condition.temperature / (gamma * np.sqrt(2))
 
 
+def _get_variance_x_from_ratio(ratio: complex) -> float:
+    return np.abs(ratio) ** 2 / (2 * np.real(ratio))
+
+
+def _get_variance_p_from_ratio(ratio: complex) -> float:
+    return hbar**2 / (2 * np.real(ratio))
+
+
+def _get_uncertainty_from_ratio(ratio: complex) -> float:
+    return _get_variance_x_from_ratio(ratio) * _get_variance_p_from_ratio(ratio)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EtaParameters:
+    """A set of dimensionless parameters used to characterize the system."""
+
+    eta_m: float
+    eta_omega: float | None = None
+    eta_lambda: float
+
+    @staticmethod
+    def from_condition(
+        condition: SimulationCondition[System[Any], Any],
+    ) -> EtaParameters:
+        """Get the damping coefficients from the simulation condition."""
+        gamma = gamma_from_eta(condition.eta, condition.mass)
+        eta_lambda = Boltzmann * condition.temperature / (hbar * gamma)
+
+        potential = condition.system.potential
+        if isinstance(potential, HarmonicPotential):
+            omega = float(potential.frequency / np.sqrt(condition.mass))
+            eta_omega = Boltzmann * condition.temperature / (hbar * omega)
+        else:
+            eta_omega = None
+
+        return EtaParameters(
+            eta_m=Boltzmann * condition.temperature / (hbar**2 / (2 * condition.mass)),
+            eta_omega=eta_omega,
+            eta_lambda=eta_lambda,
+        )
+
+    def get_free_particle_width(self) -> float:
+        """Calculate the width of a coherent state for a free particle."""
+        return np.sqrt(2 * (np.sqrt(2) - 1) / (4 * self.eta_m))
+
+    def get_high_friction_width(self) -> float:
+        """Calculate the width of a coherent state for a free particle with high friction."""
+        return np.sqrt(2 * (np.sqrt(2 * self.eta_lambda)) / (2 * self.eta_m))
+
+    def get_low_friction_width(self) -> float:
+        """Calculate the width of a coherent state for a free particle."""
+        eta_omega = self.eta_omega
+        assert eta_omega is not None
+        return eta_omega / self.eta_m
+
+    def get_free_particle_ratio(self: EtaParameters) -> complex:
+        """Calculate the ratio for a free particle."""
+        numerator = np.emath.sqrt(2 + 4 * 1j * self.eta_lambda) - 1
+        return numerator.item() / (2 * self.eta_m)
+
+    def get_free_particle_variance_x(self: EtaParameters) -> float:
+        """Calculate the variance of a coherent state for a free particle."""
+        return _get_variance_x_from_ratio(self.get_free_particle_ratio())
+
+    def get_ratio(self) -> complex:
+        """Calculate the ratio for a general set of params."""
+        eta_lambda = self.eta_lambda
+        eta_m = self.eta_m
+        eta_omega = self.eta_omega
+        assert eta_omega is not None
+        sqrt_term = np.emath.sqrt(
+            -4 * eta_lambda**2
+            + 16j * eta_lambda * eta_omega**2
+            + 1j * eta_lambda
+            + 8 * eta_omega**2
+        ).item()
+        prefactor = (1j * eta_omega) / (eta_m * (eta_lambda - 4 * 1j * eta_omega**2))
+        return prefactor * (2 * eta_omega - sqrt_term)
+
+    def get_variance_x(self: EtaParameters) -> float:
+        """Calculate the variance of a coherent state for a general set of params."""
+        return _get_variance_x_from_ratio(self.get_ratio())
+
+    def get_variance_p(self: EtaParameters) -> float:
+        """Calculate the variance of a coherent state for a general set of params."""
+        return _get_variance_p_from_ratio(self.get_ratio())
+
+    def get_uncertainty(self: EtaParameters) -> float:
+        """Calculate the uncertainty of a coherent state for a general set of params."""
+        return _get_uncertainty_from_ratio(self.get_ratio())
+
+
+def get_harmonic_width(params: EtaParameters) -> float:
+    """Calculate the width of a coherent state for a harmonic potential.
+
+    Raises
+    ------
+    ValueError
+        If the harmonic potential frequency is not defined.
+    """
+    eta_omega = params.eta_omega
+    if eta_omega is None:
+        msg = "The harmonic potential frequency is not defined."
+        raise ValueError(msg)
+    return 2 * eta_omega / params.eta_m
+
+
 def get_free_displacements[M: TimeMetadata](
     condition: SimulationCondition[Any, Any],
     times: M,
@@ -88,120 +200,22 @@ def get_free_displacements[M: TimeMetadata](
     return Array(basis.from_metadata(times), times.values * rate)
 
 
-def _get_fundamental_scatter[
+def measure_restored_x[
     M0: BasisMetadata,
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[M0, StackedMetadata[M1, E]],
-    axis: int,
-) -> Array[M0, np.complexfloating]:
-    r"""Get the scattering operator for a wavepacket.
-
-    For a gaussian wavepacket
-
-    \ket{\psi} = A \exp{(-\frac{{(x - x_0)}^2}{2 \sigma_0} + ik_0(x-x_0))} \ket{x}
-
-    the expectation is given by
-
-    \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}
-    """
-    n_dim = len(states.basis.metadata()[1].children)
-    n_k = tuple(1 if i == axis else 0 for i in range(n_dim))
-    scatter = operator.build.scattering_operator(states.basis.metadata()[1], n_k=n_k)
-
-    states = state.normalize_states(states)
-    return operator.expectation_of_each(scatter, states)
-
-
-def get_restored_scatter[
-    M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    states: StateList[M0, StackedMetadata[M1, E]],
-    k: tuple[float, ...],
-) -> Array[M0, np.complexfloating]:
-    r"""Get the restored scattering operator for a wavepacket.
-
-    For a gaussian wavepacket
-
-    \ket{\psi} = A \exp{(-\frac{{(x - x_0)}^2}{2 \sigma_0} + ik_0(x-x_0))} \ket{x}
-
-    the expectation is given by
-
-    \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}
-    """
-    raise NotImplementedError
-
-
-def get_gaussian_width[
-    M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    states: StateList[M0, StackedMetadata[M1, E]],
-    axis: int,
-) -> Array[M0, np.floating]:
-    r"""Get the width of a Gaussian wavepacket.
-
-    For a gaussian wavepacket
-
-    \ket{\psi} = A \exp{(-\frac{{(x - x_0)}^2}{2 \sigma_0} + ik_0(x-x_0))} \ket{x}
-
-    the expectation is given by
-
-    \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}
-    """
-    scatter = _get_fundamental_scatter(states, axis)
-
-    norm = array.abs(scatter)
-    dk = metadata.volume.fundamental_stacked_dk(states.basis.metadata()[1])[axis]
-    q = np.linalg.norm(dk).item()
-    return array.sqrt(array.log(norm) * -(4 / q**2))
-
-
-def get_periodic_position[
-    M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    states: StateList[M0, StackedMetadata[M1, E]],
-    axis: int,
-) -> Array[M0, np.floating]:
-    r"""Get the periodic position coordinate of a wavepacket.
-
-    For a gaussian wavepacket
-
-    \ket{\psi} = A \exp{(-\frac{{(x - x_0)}^2}{2 \sigma_0} + ik_0(x-x_0))} \ket{x}
-
-    the expectation is given by
-
-    \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}
-    """
-    scatter = _get_fundamental_scatter(states, axis)
-
-    angle = array.angle(scatter)
-    wrapped = array.mod(angle, (2 * np.pi))
-    delta_x = metadata.volume.fundamental_stacked_delta_x(states.basis.metadata()[1])
-    return wrapped * (np.linalg.norm(delta_x[axis]).item() / (2 * np.pi))
-
-
-def get_restored_position[
-    M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    *,
     axis: int,
 ) -> Array[M0, np.floating]:
     """Get the restored position coordinate of a wavepacket."""
-    scatter = _get_fundamental_scatter(states, axis)
+    periodic_x = operator.measure.all_periodic_x(states, axis=axis)
 
-    angle = array.angle(scatter)
-    unwrapped = array.unwrap(angle, axis=1)
     delta_x = metadata.volume.fundamental_stacked_delta_x(states.basis.metadata()[1])
-    return unwrapped * (np.linalg.norm(delta_x[axis]).item() / (2 * np.pi))
+    factor = 2 * np.pi / np.linalg.norm(delta_x[axis]).item()
+
+    return array.unwrap(periodic_x * factor, axis=1) * (1 / factor)
 
 
 def _calculate_total_offsset_multiplications_real(
@@ -229,10 +243,11 @@ def get_restored_displacements[
     E: AxisDirections,
 ](
     states: StateList[Metadata2D[M0, M1, None], StackedMetadata[M2, E]],
+    *,
     axis: int,
 ) -> Array[Metadata2D[M0, M1, None], np.floating]:
     """Get the restored displacement of a wavepacket."""
-    positions = array.as_fundamental_basis(get_restored_position(states, axis))
+    positions = array.as_fundamental_basis(measure_restored_x(states, axis=axis))
     squared = array.square(positions).as_array()
     total = np.cumsum(squared + squared[:, ::-1], axis=1)[:, ::-1]
 
@@ -289,18 +304,3 @@ def get_restored_isf[
     size = scatter.basis.fundamental_size
     isf = (convolution) / np.arange(1, size + 1)[::-1]
     return Array(basis.as_fundamental(scatter.basis), isf)
-
-
-def get_momentum[
-    M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    states: StateList[M0, StackedMetadata[M1, E]],
-    axis: int,
-) -> Array[M0, np.floating]:
-    """Get the momentum of a wavepacket."""
-    momentum = operator.build.k_operator(states.basis.metadata()[1], idx=axis)
-
-    states = state.normalize_states(states)
-    return array.real(operator.expectation_of_each(momentum, states))

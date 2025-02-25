@@ -3,8 +3,9 @@ from __future__ import annotations
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore library
 from slate import plot
+from slate_quantum import operator
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
@@ -14,9 +15,8 @@ from adsorbate_simulation.system import (
 )
 from adsorbate_simulation.util import (
     get_free_displacements,
-    get_periodic_position,
     get_restored_displacements,
-    get_restored_position,
+    measure_restored_x,
     spaced_time_basis,
 )
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # of the wavepacket. However, we can extract the displacement from a periodic
     # measure e^{ikx} for some k which is periodic in the simulation basis
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_FREE_SYSTEM,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(2,), resolution=(55,), truncation=(2 * 45,)
@@ -43,13 +43,13 @@ if __name__ == "__main__":
     # The periodic position is the position of the wavepacket
     # in the simulation basis which is periodic.
     fig, ax = plot.get_figure()
-    positions = get_periodic_position(states, axis=0)[0, slice(None)]
+    positions = operator.measure.all_periodic_x(states, axis=0)[0, slice(None)]
     _, _, line = plot.array_against_basis(positions, measure="real", ax=ax)
     line.set_label("Periodic position")
 
     # To calculate the restored position, we can identify the periodic
     # discontinuities in the periodic data to 'unwrap' the wavepacket.
-    positions = get_restored_position(states, axis=0)[0, slice(None)]
+    positions = measure_restored_x(states, axis=0)[0, slice(None)]
     _, _, line = plot.array_against_basis(positions, measure="real", ax=ax)
     line.set_label("Restored position")
 

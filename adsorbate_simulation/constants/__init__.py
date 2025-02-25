@@ -22,7 +22,7 @@ from adsorbate_simulation.constants.potential import (
     NA_CU_COS_POTENTIAL_ELENA,
 )
 from adsorbate_simulation.constants.system import (
-    DIMENSIONLESS_1D_FREE_SYSTEM,
+    DIMENSIONLESS_1D_SYSTEM,
     LI_CU_111_1D_SYSTEM,
     NA_CU_111_1D_SYSTEM,
 )
@@ -30,7 +30,7 @@ from adsorbate_simulation.constants.system import (
 __all__ = [
     "CU_1D_UNIT_CELL_ELENA",
     "CU_111_1D_UNIT_CELL",
-    "DIMENSIONLESS_1D_FREE_SYSTEM",
+    "DIMENSIONLESS_1D_SYSTEM",
     "DIMENSIONLESS_MASS",
     "DIMENSIONLESS_UNIT_CELL",
     "FREE_POTENTIAL",

@@ -9,7 +9,7 @@ from slate.plot import (
 )
 from slate_quantum import dynamics, state
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
+from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     IsotropicSimulationConfig,
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # equation.
     # First we create a simulation condition for a free system in 1D.
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_FREE_SYSTEM,
+        DIMENSIONLESS_1D_SYSTEM,
         IsotropicSimulationConfig(
             simulation_basis=MomentumSimulationBasis(
                 shape=(2,), resolution=(55,), truncation=(2 * 45,)
@@ -37,11 +37,11 @@ if __name__ == "__main__":
 
     # We simulate the system using the stochastic Schrodinger equation.
     # We find a localized stochastic evolution of the wavepacket.
-    times = spaced_time_basis(n=20000, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=100, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
     states = dynamics.select_realization(states)
 
-    # We start the system in an gaussian state, centered at the origin.
+    # We start the system in a Gaussian state, centered at the origin.
     fig, ax, _ = plot.array_against_axes_1d(states[0, :], measure="abs")
     ax.set_title("Initial State - A Gaussian Wavepacket Centered at the Origin")
     fig.show()

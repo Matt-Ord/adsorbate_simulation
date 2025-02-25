@@ -9,12 +9,14 @@ from slate.plot import (
 )
 from slate_quantum import dynamics, state
 
-from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_FREE_SYSTEM
+from adsorbate_simulation.constants import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     CaldeiraLeggettEnvironment,
+    HarmonicCoherentInitialState,
+    HarmonicPotential,
     IsotropicSimulationConfig,
-    MomentumSimulationBasis,
+    PositionSimulationBasis,
     SimulationCondition,
 )
 from adsorbate_simulation.util import spaced_time_basis
@@ -24,25 +26,32 @@ if __name__ == "__main__":
     # caldeira leggett model.
     # This example simulates an plots a single stochastic realization as
     # calculated under the stochastic Schrodinger equation.
+    system = DIMENSIONLESS_1D_SYSTEM.with_potential(
+        HarmonicPotential(frequency=20 / hbar)
+    )
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_FREE_SYSTEM,
+        system,
         IsotropicSimulationConfig(
-            simulation_basis=MomentumSimulationBasis(
-                shape=(2,), resolution=(55,), truncation=(2 * 45,)
+            simulation_basis=PositionSimulationBasis(
+                shape=(1,),
+                resolution=(100,),
+                offset=((100 - 80) // 2,),
+                truncation=(80,),
             ),
             environment=CaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
             target_delta=1e-3,
+            initial_state=HarmonicCoherentInitialState(),
         ),
     )
 
     # We simulate the system using the stochastic Schrodinger equation.
     # We find a localized stochastic evolution of the wavepacket.
-    times = spaced_time_basis(n=20000, dt=0.1 * np.pi * hbar)
-    states = run_stochastic_simulation(condition, times)
+    times = spaced_time_basis(n=100, dt=0.1 * np.pi * hbar)
+    states = run_stochastic_simulation.call_cached(condition, times)
     states = dynamics.select_realization(states)
 
-    # We start the system in an gaussian state, centered at the origin.
+    # We start the system in a gaussian state, centered at the origin.
     fig, ax, _ = plot.array_against_axes_1d(states[0, :], measure="abs")
     ax.set_title("Initial State - A Gaussian Wavepacket Centered at the Origin")
     fig.show()

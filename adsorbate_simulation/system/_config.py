@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Self, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 import numpy as np
+from scipy.constants import hbar  # type: ignore lib
 from slate import basis as _basis
-from slate import tuple_basis
+from slate import metadata, tuple_basis
 from slate.basis import diagonal_basis
+from slate_quantum import state
 from slate_quantum.metadata import RepeatedVolumeMetadata, eigenvalue_basis
 from slate_quantum.noise import (
     DiagonalNoiseOperatorList,
@@ -18,13 +20,18 @@ from slate_quantum.noise import (
 )
 from slate_quantum.operator import OperatorList
 
+from adsorbate_simulation.system._potential import (
+    HarmonicPotential,
+    SimulationPotential,
+)
 from adsorbate_simulation.util import eta_from_gamma
 
 if TYPE_CHECKING:
     from slate.metadata import SpacedVolumeMetadata
-    from slate_quantum import Operator
+    from slate_quantum import Operator, State
 
     from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
+    from adsorbate_simulation.system._system import System
 
 
 class Environment(ABC):
@@ -165,9 +172,70 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
         return operators.with_operator_basis(operators.basis[1].inner)
 
 
+class InitialState(ABC):
+    """Configure the initial state of the system."""
+
+    @abstractmethod
+    def get_state(
+        self, system: System[Any], basis: SimulationBasis
+    ) -> State[SpacedVolumeMetadata]: ...
+
+
+@dataclass(frozen=True, kw_only=True)
+class CoherentInitialState(InitialState):
+    """A Gaussian initial state, centered at the minimum of the potential."""
+
+    width_factor: tuple[int, ...] | int = 6
+
+    @override
+    def get_state[P: SimulationPotential](
+        self, system: System[P], basis: SimulationBasis
+    ) -> State[SpacedVolumeMetadata]:
+        widths = (
+            (self.width_factor for _ in system.cell.lengths)
+            if isinstance(self.width_factor, int)
+            else self.width_factor
+        )
+        sigma_0 = tuple(
+            ln / w for ln, w in zip(system.cell.lengths, widths, strict=True)
+        )
+        potential = system.potential.get_potential(system.cell, basis).as_diagonal()
+        x_points = metadata.volume.fundamental_stacked_x_points(
+            potential.basis.metadata()
+        )
+        min_point = np.argmin(potential.as_array())
+        x_0 = tuple(x[min_point] for x in x_points)
+        k_0 = tuple(0 for _ in system.cell.lengths)
+        return state.build.coherent(potential.basis.metadata(), x_0, k_0, sigma_0)
+
+
+@dataclass(frozen=True, kw_only=True)
+class HarmonicCoherentInitialState(InitialState):
+    """A Gaussian initial state, centered at the minimum of the potential."""
+
+    @staticmethod
+    def get_harmonic_width(frequency: float, mass: float) -> float:
+        # we have 1/2 m omega **2 = 1/2 freq **2
+        omega = frequency / np.sqrt(mass)
+        return np.sqrt(hbar / (omega * mass))
+
+    @override
+    def get_state[P: SimulationPotential](
+        self, system: System[P], basis: SimulationBasis
+    ) -> State[SpacedVolumeMetadata]:
+        assert isinstance(system.potential, HarmonicPotential)
+        width = self.get_harmonic_width(system.potential.frequency, system.mass)
+        sigma_0 = tuple(width for _ in system.cell.lengths)
+
+        metadata = basis.get_fundamental_metadata(system.cell)
+        x_0 = tuple(x / 2 for x in system.cell.lengths)
+        k_0 = tuple(0 for _ in system.cell.lengths)
+        return state.build.coherent(metadata, x_0, k_0, sigma_0)
+
+
 @dataclass(frozen=True, kw_only=True)
 class SimulationConfig:
-    """Configure the simlation-specific detail of the system."""
+    """Configure the simulation-specific detail of the system."""
 
     simulation_basis: SimulationBasis
     environment: Environment = field(default_factory=ClosedEnvironment, kw_only=True)
@@ -178,6 +246,9 @@ class SimulationConfig:
     )
     direction: tuple[int, ...] | None = field(default=None, kw_only=True)
     target_delta: float = field(default=1e-5, kw_only=True)
+    initial_state: InitialState = field(
+        default_factory=CoherentInitialState, kw_only=True
+    )
 
     def __post_init__(self) -> None:
         assert self.scattered_energy_range[0] <= self.scattered_energy_range[1]
@@ -190,6 +261,8 @@ class SimulationConfig:
             temperature=self.temperature,
             scattered_energy_range=self.scattered_energy_range,
             direction=self.direction,
+            target_delta=self.target_delta,
+            initial_state=self.initial_state,
         )
 
     def with_environment(self, environment: Environment) -> Self:
@@ -200,6 +273,8 @@ class SimulationConfig:
             temperature=self.temperature,
             scattered_energy_range=self.scattered_energy_range,
             direction=self.direction,
+            target_delta=self.target_delta,
+            initial_state=self.initial_state,
         )
 
     def with_temperature(self, temperature: float) -> Self:
@@ -210,6 +285,8 @@ class SimulationConfig:
             temperature=temperature,
             scattered_energy_range=self.scattered_energy_range,
             direction=self.direction,
+            target_delta=self.target_delta,
+            initial_state=self.initial_state,
         )
 
     def with_scattered_energy_range(
@@ -223,6 +300,8 @@ class SimulationConfig:
             temperature=self.temperature,
             scattered_energy_range=energy_range,
             direction=self.direction,
+            target_delta=self.target_delta,
+            initial_state=self.initial_state,
         )
 
     def with_direction(self, direction: tuple[int, ...]) -> Self:
@@ -233,6 +312,8 @@ class SimulationConfig:
             temperature=self.temperature,
             scattered_energy_range=self.scattered_energy_range,
             direction=direction,
+            target_delta=self.target_delta,
+            initial_state=self.initial_state,
         )
 
     def with_target_delta(self, target_delta: float) -> Self:
@@ -244,6 +325,19 @@ class SimulationConfig:
             scattered_energy_range=self.scattered_energy_range,
             direction=self.direction,
             target_delta=target_delta,
+            initial_state=self.initial_state,
+        )
+
+    def with_initial_state(self, initial_state: InitialState) -> Self:
+        """Create a new config with different initial state."""
+        return type(self)(
+            simulation_basis=self.simulation_basis,
+            environment=self.environment,
+            temperature=self.temperature,
+            scattered_energy_range=self.scattered_energy_range,
+            direction=self.direction,
+            target_delta=self.target_delta,
+            initial_state=initial_state,
         )
 
     def get_fundamental_metadata(self, cell: SimulationCell) -> RepeatedVolumeMetadata:
@@ -260,6 +354,9 @@ class SimulationConfig:
         self, hamiltonian: Operator[SpacedVolumeMetadata, np.complexfloating]
     ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
         return self.environment.get_hamiltonian_shift(hamiltonian)
+
+    def get_initial_state(self, system: System[Any]) -> State[SpacedVolumeMetadata]:
+        return self.initial_state.get_state(system, self.simulation_basis)
 
 
 @dataclass(frozen=True, kw_only=True)

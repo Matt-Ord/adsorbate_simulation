@@ -21,11 +21,12 @@ from adsorbate_simulation.constants.potential import (
 )
 from adsorbate_simulation.system._system import System
 
-DIMENSIONLESS_1D_FREE_SYSTEM = System(
+DIMENSIONLESS_1D_SYSTEM = System(
     DIMENSIONLESS_MASS,
     FREE_POTENTIAL,
     DIMENSIONLESS_UNIT_CELL,
 )
+
 
 LI_CU_111_1D_SYSTEM = System(
     LITHIUM_MASS,

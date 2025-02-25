@@ -8,9 +8,11 @@ from slate_quantum import operator
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
+    CaldeiraLeggettEnvironment,
+    HarmonicCoherentInitialState,
+    HarmonicPotential,
     IsotropicSimulationConfig,
-    MomentumSimulationBasis,
-    PeriodicCaldeiraLeggettEnvironment,
+    PositionSimulationBasis,
     SimulationCondition,
 )
 from adsorbate_simulation.util import (
@@ -23,18 +25,25 @@ if __name__ == "__main__":
     # but what distribution of p,x,sigma should we choose?
     # For a consistent choice, we can run a simulation
     # and fit the resulting states to a Gaussian.
+    system = DIMENSIONLESS_1D_SYSTEM.with_potential(
+        HarmonicPotential(frequency=20 / hbar)
+    )
     condition = SimulationCondition(
-        DIMENSIONLESS_1D_SYSTEM,
+        system,
         IsotropicSimulationConfig(
-            simulation_basis=MomentumSimulationBasis(
-                shape=(2,), resolution=(55,), truncation=(2 * 45,)
+            simulation_basis=PositionSimulationBasis(
+                shape=(1,),
+                resolution=(300,),
+                offset=((300 - 200) // 2,),
+                truncation=(200,),
             ),
-            environment=PeriodicCaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
+            environment=CaldeiraLeggettEnvironment(_eta=2 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
-            target_delta=1e-3,
+            target_delta=0.2e-3,
+            initial_state=HarmonicCoherentInitialState(),
         ),
     )
-    times = spaced_time_basis(n=100, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=100, dt=0.01 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
 
     # Using the e^{ikx} operator, we can calculate the position
@@ -58,11 +67,11 @@ if __name__ == "__main__":
 
     # We can also calculate the width of the wavepacket
     # This remains almost constant over the course of the simulation.
-    widths = operator.measure.all_variance_x(states, axis=0)
     params = EtaParameters.from_condition(condition)
-    theoretical_width = params.get_free_particle_variance_x()
+    theoretical = params.get_variance_x()
+    widths = operator.measure.all_variance_x(states, axis=0)
     fig, ax, line = plot.array_against_basis(widths, measure="real")
-    line = ax.axhline(theoretical_width)
+    line = ax.axhline(theoretical)
     line.set_color("red")
     line.set_label("Theoretical width")
     ax.set_title("Width of the wavepacket against time")
@@ -71,11 +80,33 @@ if __name__ == "__main__":
     fig.show()
     # The width of the wavepacket oscillates about the equilibrium width
     fig, ax = plot.array_distribution(widths, distribution="normal")
-    line = ax.axvline(theoretical_width)
+    line = ax.axvline(theoretical)
     line.set_color("red")
     line.set_label("Theoretical width")
     ax.set_title("Distribution of wavepacket width")
     ax.set_xlabel("Width (a.u.)")
+    ax.set_ylabel("Probability")
+    fig.show()
+
+    # Similarly the uncertainty
+    params = EtaParameters.from_condition(condition)
+    theoretical = np.sqrt(params.get_uncertainty() / hbar**2)
+    widths = operator.measure.all_uncertainty(states, axis=0)
+    fig, ax, line = plot.array_against_basis(widths, measure="real")
+    line = ax.axhline(theoretical)
+    line.set_color("red")
+    line.set_label("Theoretical uncertainty")
+    ax.set_title("Uncertainty of the wavepacket against time")
+    ax.set_xlabel("Time /s")
+    ax.set_ylabel("Uncertainty (a.u.)")
+    fig.show()
+    # The uncertainty of the wavepacket oscillates about the equilibrium uncertainty
+    fig, ax = plot.array_distribution(widths, distribution="normal")
+    line = ax.axvline(theoretical)
+    line.set_color("red")
+    line.set_label("Theoretical uncertainty")
+    ax.set_title("Distribution of wavepacket uncertainty")
+    ax.set_xlabel("Uncertainty (a.u.)")
     ax.set_ylabel("Probability")
     fig.show()
 

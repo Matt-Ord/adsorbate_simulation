@@ -23,7 +23,7 @@ if __name__ == "__main__":
     line.set_alpha(0.5)
     line.set_linewidth(2)
 
-    initial_state = state.build_coherent_state(
+    initial_state = state.build.coherent(
         system.get_hamiltonian(basis).basis.metadata()[0], (2e-10,), (0,), (1e-11,)
     )
     _, _, _ = plot.array_against_axes_1d(initial_state, measure="abs", ax=ax.twinx())
