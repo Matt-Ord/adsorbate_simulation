@@ -24,7 +24,7 @@ from adsorbate_simulation.system._potential import (
     HarmonicPotential,
     SimulationPotential,
 )
-from adsorbate_simulation.util import eta_from_gamma
+from adsorbate_simulation.util._eta import eta_from_gamma
 
 if TYPE_CHECKING:
     from slate.metadata import SpacedVolumeMetadata

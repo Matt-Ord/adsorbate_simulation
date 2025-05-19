@@ -28,7 +28,7 @@ from slate_quantum.metadata import (
     TimeMetadata,
 )
 
-from adsorbate_simulation.system._potential import HarmonicPotential
+from adsorbate_simulation.util._eta import gamma_from_eta
 
 if TYPE_CHECKING:
     from slate.metadata import Metadata2D
@@ -64,16 +64,6 @@ def get_eigenvalue_occupation_hermitian[M: BasisMetadata](
 def spaced_time_basis(*, n: int, dt: float) -> FundamentalBasis[SpacedTimeMetadata]:
     """Get a Time Basis with a given number of steps between each time step."""
     return FundamentalBasis(SpacedTimeMetadata(n, spacing=LabelSpacing(delta=n * dt)))
-
-
-def gamma_from_eta(eta: float, mass: float) -> float:
-    """Get the damping coefficient from the friction and mass."""
-    return eta / (mass * 2)
-
-
-def eta_from_gamma(gamma: float, mass: float) -> float:
-    """Get the friction coefficient from the damping and mass."""
-    return gamma * mass * 2
 
 
 def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
@@ -113,6 +103,10 @@ class EtaParameters:
         eta_lambda = Boltzmann * condition.temperature / (hbar * gamma)
 
         potential = condition.system.potential
+        from adsorbate_simulation.system._potential import (  # noqa: PLC0415 if at top level will cause circular import
+            HarmonicPotential,
+        )
+
         if isinstance(potential, HarmonicPotential):
             omega = float(potential.frequency / np.sqrt(condition.mass))
             eta_omega = Boltzmann * condition.temperature / (hbar * omega)
