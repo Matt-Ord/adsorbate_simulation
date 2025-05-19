@@ -28,6 +28,7 @@ from slate_quantum.metadata import (
     TimeMetadata,
 )
 
+from adsorbate_simulation.system._potential import HarmonicPotential
 from adsorbate_simulation.util._eta import gamma_from_eta
 
 if TYPE_CHECKING:
@@ -103,9 +104,6 @@ class EtaParameters:
         eta_lambda = Boltzmann * condition.temperature / (hbar * gamma)
 
         potential = condition.system.potential
-        from adsorbate_simulation.system._potential import (  # noqa: PLC0415 if at top level will cause circular import
-            HarmonicPotential,
-        )
 
         if isinstance(potential, HarmonicPotential):
             omega = float(potential.frequency / np.sqrt(condition.mass))
