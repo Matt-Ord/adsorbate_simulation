@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore libary
-from slate import FundamentalBasis, array, plot
-from slate.metadata import LabelSpacing
-from slate.plot import animate_data_over_list_1d_x
+from slate_core import FundamentalBasis, array, plot
+from slate_core.metadata import LabelSpacing
+from slate_core.plot import animate_data_over_list_1d_x
 from slate_quantum import operator
 from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
 from slate_quantum.metadata import SpacedTimeMetadata
@@ -24,16 +24,14 @@ if __name__ == "__main__":
     system = system.with_potential(system.potential.with_barrier_height(1.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.extract_diagonal(potential))
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_color("black")
     line.set_linewidth(2)
 
     hamiltonian = system.get_hamiltonian(basis)
-    eigenstates = (
-        operator.into_diagonal_hermitian(hamiltonian).basis.inner[1].eigenvectors
-    )
+    eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
     # We start the system in an eigenstate of the new potential
     # if we evolve it in time it remains in the same state
     # but the global phase changes

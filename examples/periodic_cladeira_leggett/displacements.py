@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore library
-from slate import plot
+from slate_core import plot
 from slate_quantum import operator
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM

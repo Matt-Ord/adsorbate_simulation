@@ -5,16 +5,15 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from slate.util import cached
+from slate_core.util import cached
 from slate_quantum.dynamics import solve_stochastic_schrodinger_equation_banded
 from slate_quantum.metadata import (
     TimeMetadata,
 )
 
 if TYPE_CHECKING:
-    import numpy as np
-    from slate import Basis, SimpleMetadata
-    from slate.metadata import Metadata2D, SpacedVolumeMetadata
+    from slate_core import Basis, SimpleMetadata, TupleMetadata
+    from slate_core.metadata import SpacedVolumeMetadata
     from slate_quantum import StateList
 
     from adsorbate_simulation.system import (
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
 
 def _get_simulation_path[M: TimeMetadata](
     condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
-    times: Basis[M, np.complexfloating],
+    times: Basis[M],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
     return directory / "data" / f"{hash(condition)}.{hash(times)}.states"
@@ -35,8 +34,14 @@ def _get_simulation_path[M: TimeMetadata](
 @cached(_get_simulation_path)
 def run_stochastic_simulation[M: TimeMetadata](
     condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
-    times: Basis[M, np.complexfloating],
-) -> StateList[Metadata2D[SimpleMetadata, M, None], SpacedVolumeMetadata]:
+    times: Basis[M],
+) -> StateList[
+    Basis[
+        TupleMetadata[
+            tuple[TupleMetadata[tuple[SimpleMetadata, M], None], SpacedVolumeMetadata]
+        ]
+    ]
+]:
     """Run a stochastic simulation."""
     hamiltonian = condition.hamiltonian
     hamiltonian = hamiltonian.with_basis(condition.operator_basis)

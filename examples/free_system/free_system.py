@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
-from slate import plot
-from slate.plot import animate_data_over_list_1d_x
+from slate_core import plot
+from slate_core.plot import animate_data_over_list_1d_x
 from slate_quantum import dynamics, state
 from slate_quantum.dynamics import (
     solve_schrodinger_equation_decomposition,

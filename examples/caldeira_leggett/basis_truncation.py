@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore unknown
-from slate import linalg, plot
+from slate_core import array, linalg, plot
 
-from adsorbate_simulation.constants import (
-    DIMENSIONLESS_1D_SYSTEM,
-)
+from adsorbate_simulation.constants.lattice import CELL_DIRECTIONS_1D
 from adsorbate_simulation.system import (
     CaldeiraLeggettEnvironment,
     HarmonicPotential,
     IsotropicSimulationConfig,
     PositionSimulationBasis,
+    SimulationCell,
     SimulationCondition,
+    System,
 )
 from adsorbate_simulation.util import (
     get_eigenvalue_occupation_hermitian,
@@ -29,9 +30,8 @@ if __name__ == "__main__":
     # V(x) = 0.5 * (20 / hbar)**2 * x^2
     # we need x = hbar / sqrt(20)
     # we have delta_x = 2 * np.pi * hbar
-    system = DIMENSIONLESS_1D_SYSTEM.with_potential(
-        HarmonicPotential(frequency=20 / hbar)
-    )
+    cell = SimulationCell(lengths=(4 * 2 * np.pi,), directions=CELL_DIRECTIONS_1D)
+    system = System(hbar**2, HarmonicPotential(frequency=1), cell)
     condition = SimulationCondition(
         system,
         IsotropicSimulationConfig(
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                 truncation=(80,),
             ),
             environment=CaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
-            temperature=10 / Boltzmann,
+            temperature=10 / (Boltzmann),
             target_delta=1e-3,
         ),
     )
@@ -54,6 +54,9 @@ if __name__ == "__main__":
     # By plotting the occupation of the states, we can verify that
     # 25 states is enough resolution for this system.
     diagonal_hamiltonian = linalg.into_diagonal_hermitian(condition.hamiltonian)
+    diagonal_hamiltonian = array.as_upcast_basis(
+        diagonal_hamiltonian, diagonal_hamiltonian.basis.metadata()
+    )
     target_occupation = get_eigenvalue_occupation_hermitian(
         diagonal_hamiltonian, condition.config.temperature
     )

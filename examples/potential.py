@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from slate import array, plot
+from slate_core import array, plot
 from slate_quantum import state
 
 from adsorbate_simulation.constants.system import LI_CU_111_1D_SYSTEM
@@ -17,14 +17,17 @@ if __name__ == "__main__":
     # The potential is an Operator which is diagonal in position basis
     # Here .as_outer() is used to get the potential as an array of points along the diagonal
     potential = system.get_potential(basis)
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.extract_diagonal(potential))
     line.set_color("black")
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_linewidth(2)
 
     initial_state = state.build.coherent(
-        system.get_hamiltonian(basis).basis.metadata()[0], (2e-10,), (0,), (1e-11,)
+        system.get_hamiltonian(basis).basis.metadata().children[0],
+        (2e-10,),
+        (0,),
+        (1e-11,),
     )
     _, _, _ = plot.array_against_axes_1d(initial_state, measure="abs", ax=ax.twinx())
 

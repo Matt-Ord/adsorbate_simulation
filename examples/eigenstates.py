@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from matplotlib.scale import SymmetricalLogScale
 from scipy.constants import hbar  # type: ignore library
-from slate import array, plot
+from slate_core import array, plot
 from slate_quantum import operator
 
 from adsorbate_simulation.constants.system import (
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     system = system.with_potential(system.potential.with_barrier_height(5.0))
     # The new potential has a non-zero barrier height
     potential = system.get_potential(basis)
-    fig, ax, _ = plot.array_against_axes_1d(array.as_outer_array(potential))
+    fig, ax, _ = plot.array_against_axes_1d(array.extract_diagonal(potential))
     hamiltonian = system.get_hamiltonian(basis)
     eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
     # The eigenstates of this system are plotted in position basis
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     system = system.with_potential(HarmonicPotential(frequency=10 / hbar))
     basis = PositionSimulationBasis(shape=(1,), resolution=(100,))
     potential = system.get_potential(basis)
-    fig, ax, _ = plot.array_against_axes_1d(array.as_outer_array(potential))
+    fig, ax, _ = plot.array_against_axes_1d(array.extract_diagonal(potential))
     ax2 = ax.twinx()
     # We want to use hard wall boundary conditions, choosing
     # a suitable truncation for the basis. We find that 50

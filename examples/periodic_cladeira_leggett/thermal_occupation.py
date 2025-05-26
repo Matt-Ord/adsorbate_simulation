@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore unknown
-from slate import array, linalg, plot
+from slate_core import array, linalg, plot
 from slate_quantum import state
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
@@ -23,12 +21,6 @@ from adsorbate_simulation.util import (
     get_eigenvalue_occupation_hermitian,
     spaced_time_basis,
 )
-
-
-def _out_path(filename: str) -> Path:
-    name = Path(__file__).stem + "." + filename
-    return Path(__file__).parent / "out" / name
-
 
 if __name__ == "__main__":
     # When we perform a simulation, we need to make sure we recover the
@@ -56,14 +48,16 @@ if __name__ == "__main__":
 
     diagonal_hamiltonian = linalg.into_diagonal_hermitian(condition.hamiltonian)
     target_occupation = get_eigenvalue_occupation_hermitian(
-        diagonal_hamiltonian, condition.config.temperature
+        array.as_upcast_basis(
+            diagonal_hamiltonian, diagonal_hamiltonian.basis.metadata()
+        ),
+        condition.config.temperature,
     )
     fig, ax, line = plot.array_against_basis(target_occupation)
     ax.set_title("Thermal occupation of the states")
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
     line.set_marker("x")
-    fig.savefig(_out_path("expected.png"))
     fig.show()
     plot.wait_for_close()
 
@@ -72,7 +66,7 @@ if __name__ == "__main__":
     times = spaced_time_basis(n=2000, dt=0.1 * np.pi * hbar)
     states = run_stochastic_simulation(condition, times)
     states = state.normalize_all(states)
-    states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
+    states = states.with_state_basis(diagonal_hamiltonian.basis.inner.children[0])
 
     average_occupation, std_occupation = state.get_average_occupations(states)
     average_occupation = array.cast_basis(average_occupation, target_occupation.basis)
@@ -81,14 +75,16 @@ if __name__ == "__main__":
     # expected thermal occupation.
     fig, ax = plot.get_figure()
     _, _, line = plot.array_against_basis(target_occupation, ax=ax)
+    line.set_label("Target Occupation")
     _, _, line = plot.array_against_basis(
         average_occupation, y_error=std_occupation, ax=ax
     )
+    line.set_marker("x")
+    line.set_label("Average Occupation")
     ax.set_title("True occupation of the states")
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
-    line.set_marker("x")
-    fig.savefig(_out_path("actual.png"))
+    ax.legend()
     fig.show()
 
     # Just how close are the fitted temperatures to the actual temperatures?
@@ -102,7 +98,10 @@ if __name__ == "__main__":
         .temperature
     )
     fitted_occupation = get_eigenvalue_occupation_hermitian(
-        diagonal_hamiltonian, implied_temperature
+        array.as_upcast_basis(
+            diagonal_hamiltonian, diagonal_hamiltonian.basis.metadata()
+        ),
+        implied_temperature,
     )
 
     fig, ax = plot.get_figure()
@@ -121,7 +120,6 @@ if __name__ == "__main__":
     )
     ax.set_xlabel("Energy /J")
     ax.set_ylabel("Occupation Probability")
-    fig.savefig(_out_path("fitted.png"))
     fig.show()
 
     plot.wait_for_close()

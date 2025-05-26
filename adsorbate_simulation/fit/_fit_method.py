@@ -13,14 +13,19 @@ from typing import (
 
 import numpy as np
 from scipy.optimize import curve_fit  # type: ignore unknown
-from slate.array import Array
-from slate.basis import FundamentalBasis, as_index_basis
-from slate.metadata import LabeledMetadata
+from slate_core import basis
+from slate_core.array import Array, ArrayWithMetadata
+from slate_core.basis import FundamentalBasis
+from slate_core.metadata import LabeledMetadata
 
 from adsorbate_simulation.system import SimulationCondition
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+type FitData = ArrayWithMetadata[
+    LabeledMetadata[np.dtype[np.floating]], np.dtype[np.floating]
+]
 
 
 class FitMethod[T, I: Any](ABC):
@@ -78,7 +83,9 @@ class FitMethod[T, I: Any](ABC):
 
     @abstractmethod
     def _fit_param_initial_guess(
-        self, data: Array[LabeledMetadata[np.floating], np.floating], info: I
+        self,
+        data: FitData,
+        info: I,
     ) -> tuple[float, ...]: ...
 
     @abstractmethod
@@ -86,12 +93,12 @@ class FitMethod[T, I: Any](ABC):
 
     def get_fit_from_data(
         self,
-        data: Array[LabeledMetadata[np.floating], np.floating],
+        data: FitData,
         info: I,
         *,
-        y_error: Array[LabeledMetadata[np.floating], np.floating] | None = None,
+        y_error: FitData | None = None,
     ) -> T:
-        converted = data.with_basis(as_index_basis(data.basis))
+        converted = data.with_basis(basis.as_index(data.basis))
         y_data = converted.raw_data
 
         x_values = np.asarray(data.basis.metadata().values)[converted.basis.points]
@@ -127,19 +134,19 @@ class FitMethod[T, I: Any](ABC):
         return self._fit_from_params(*self._scale_params(1 / dx, tuple(parameters)))
 
     @classmethod
-    def get_fitted_data[M: LabeledMetadata[np.floating]](
+    def get_fitted_data[M: LabeledMetadata[np.dtype[np.floating]]](
         cls: type[Self],
         fit: T,
         times: M,
-    ) -> Array[M, np.floating]:
+    ) -> ArrayWithMetadata[M, np.dtype[np.floating]]:
         data = cls._fit_fn(np.asarray(times.values), *cls._params_from_fit(fit))
         return Array(FundamentalBasis(times), data)
 
     @classmethod
-    def get_function_for_fit[M: LabeledMetadata[np.floating]](
+    def get_function_for_fit[M: LabeledMetadata[np.dtype[np.floating]]](
         cls: type[Self],
         fit: T,
-    ) -> Callable[[M], Array[M, np.floating]]:
+    ) -> Callable[[M], ArrayWithMetadata[M, np.dtype[np.floating]]]:
         return functools.partial(cls.get_fitted_data, fit)
 
     @classmethod
@@ -150,7 +157,7 @@ class FitMethod[T, I: Any](ABC):
 class ISFFitMethod[T](FitMethod[T, SimulationCondition]):
     def get_rate_from_data(
         self,
-        data: Array[LabeledMetadata[np.floating], np.floating],
+        data: FitData,
         info: SimulationCondition,
     ) -> float:
         fit = self.get_fit_from_data(data, info)
@@ -165,4 +172,4 @@ class ISFFitMethod[T](FitMethod[T, SimulationCondition]):
     @abstractmethod
     def get_fit_times(
         self, info: SimulationCondition
-    ) -> LabeledMetadata[np.floating]: ...
+    ) -> LabeledMetadata[np.dtype[np.floating]]: ...

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
-from slate import array, basis, plot
+from slate_core import array, basis, plot
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.system import (
@@ -28,9 +28,11 @@ if __name__ == "__main__":
     )
     # The Hamiltonian is diagonal in momentum basis
     hamiltonian = condition.hamiltonian.with_basis(condition.operator_basis)
-    fig, ax, _ = plot.array_against_axes_2d_k(
-        array.flatten(hamiltonian), measure="real"
+    hamiltonian_flat = array.flatten(hamiltonian)
+    hamiltonian_flat = array.as_upcast_basis(
+        hamiltonian_flat, hamiltonian_flat.basis.metadata()
     )
+    fig, ax, _ = plot.array_against_axes_2d_k(hamiltonian_flat, measure="real")
     ax.set_title("Hamiltonian in Momentum Space")
     fig.show()
 
@@ -38,7 +40,7 @@ if __name__ == "__main__":
     # This generates isotropic periodic noise which matches classical friction.
     environment_operators = condition.get_environment_operators()
     for eigenvalue, operator in zip(
-        np.sqrt(environment_operators.basis.metadata()[0].values),
+        np.sqrt(environment_operators.basis.metadata().children[0].values),
         environment_operators,
         strict=False,
     ):
@@ -65,24 +67,20 @@ if __name__ == "__main__":
     original_operator = original_operator.with_basis(
         basis.from_metadata(
             original_operator.basis.metadata(), is_dual=original_operator.basis.is_dual
-        )
+        ).upcast()
     )
-    fig, ax, _ = plot.array_against_axes_2d_k(
-        array.flatten(original_operator), measure="abs"
-    )
+    operator_flat = array.flatten(original_operator)
+    operator_flat = array.as_upcast_basis(operator_flat, operator_flat.basis.metadata())
+    fig, ax, _ = plot.array_against_axes_2d_k(operator_flat, measure="abs")
     ax.set_title("Original Environment Operator in Momentum Space")
     fig.show()
     # When we apply the temperature correction, the operator scatters more strongly
     # if the initial state has a higher energy than the final state. In this case we
     # are scatting by a negative k, so we see this increase in the positive k region.
-    fig, ax, _ = plot.array_against_axes_2d_k(
-        array.flatten(corrected_operator), measure="abs"
-    )
+    fig, ax, _ = plot.array_against_axes_2d_k(operator_flat, measure="abs")
     ax.set_title("Temperature Corrected Environment Operator in Momentum Space")
     fig.show()
-    fig, ax, _ = plot.array_against_axes_2d_x(
-        array.flatten(corrected_operator), measure="real"
-    )
+    fig, ax, _ = plot.array_against_axes_2d_x(operator_flat, measure="real")
     ax.set_title("Temperature Corrected Environment Operator in Position Space")
     fig.show()
 
@@ -91,9 +89,9 @@ if __name__ == "__main__":
     corrected_operator = condition.temperature_corrected_operators[1, :].with_basis(
         condition.operator_basis
     )
-    fig, ax, _ = plot.array_against_axes_2d_k(
-        array.flatten(corrected_operator), measure="abs"
-    )
+    operator_flat = array.flatten(corrected_operator)
+    operator_flat = array.as_upcast_basis(operator_flat, operator_flat.basis.metadata())
+    fig, ax, _ = plot.array_against_axes_2d_k(operator_flat, measure="abs")
     ax.set_title("Second Temperature Corrected Environment Operator in Momentum Space")
     fig.show()
 

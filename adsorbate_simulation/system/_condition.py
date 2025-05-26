@@ -1,26 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, Never, overload
 
 from adsorbate_simulation.system._config import IsotropicSimulationConfig
 
 if TYPE_CHECKING:
     import numpy as np
-    from slate import Basis
-    from slate.basis import TupleBasis2D
-    from slate.metadata import (
+    from slate_core import Basis, Ctype
+    from slate_core.metadata import (
         AxisDirections,
         SpacedLengthMetadata,
         SpacedVolumeMetadata,
     )
-    from slate_quantum import State
-    from slate_quantum.metadata import RepeatedVolumeMetadata
+    from slate_quantum.metadata import EigenvalueMetadata, RepeatedVolumeMetadata
     from slate_quantum.noise import (
         DiagonalNoiseOperatorList,
         NoiseOperatorList,
     )
-    from slate_quantum.operator import Operator, Potential
+    from slate_quantum.operator import Operator, OperatorBasis, Potential
+    from slate_quantum.state import StateWithMetadata
 
     from adsorbate_simulation.system._config import SimulationConfig
     from adsorbate_simulation.system._system import System
@@ -51,14 +50,16 @@ class SimulationCondition[
     @property
     def potential(
         self,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata, AxisDirections, Ctype[Never], np.dtype[np.complexfloating]
+    ]:
         """Get the potential for the simulation."""
         return self.system.get_potential(self.config.simulation_basis)
 
     @property
     def hamiltonian(
         self,
-    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
+    ) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
         system_hamiltonian = self.system.get_hamiltonian(self.config.simulation_basis)
         shift = self.config.get_hamiltonian_shift(system_hamiltonian)
         return system_hamiltonian + shift
@@ -67,28 +68,28 @@ class SimulationCondition[
     def fundamental_metadata(self) -> RepeatedVolumeMetadata:
         return self.config.simulation_basis.get_fundamental_metadata(self.system.cell)
 
-    def get_initial_state(self) -> State[SpacedVolumeMetadata]:
+    def get_initial_state(self) -> StateWithMetadata[SpacedVolumeMetadata]:
         return self.config.get_initial_state(self.system)
 
     @overload
     def get_environment_operators[C_: IsotropicSimulationConfig](
         self: SimulationCondition[Any, C_],
-    ) -> DiagonalNoiseOperatorList[SpacedVolumeMetadata]: ...
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]: ...
     @overload
     def get_environment_operators(
         self,
-    ) -> NoiseOperatorList[SpacedVolumeMetadata]: ...
+    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]: ...
 
     def get_environment_operators(
         self,
-    ) -> NoiseOperatorList[SpacedVolumeMetadata]:
+    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
         metadata = self.fundamental_metadata
         return self.config.environment.get_operators(metadata)
 
     @property
     def temperature_corrected_operators(
         self,
-    ) -> NoiseOperatorList[SpacedVolumeMetadata]:
+    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
         return self.config.get_temperature_corrected_operators(self.hamiltonian)
 
     @property
@@ -117,17 +118,12 @@ class SimulationCondition[
         return self.config.environment.eta
 
     @property
-    def simulation_basis(self) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    def simulation_basis(self) -> Basis[SpacedVolumeMetadata]:
         return self.config.simulation_basis.get_simulation_basis(self.system.cell)
 
     @property
     def operator_basis(
         self,
-    ) -> TupleBasis2D[
-        np.complexfloating,
-        Basis[SpacedVolumeMetadata, np.complex128],
-        Basis[SpacedVolumeMetadata, np.complex128],
-        None,
-    ]:
+    ) -> OperatorBasis[SpacedVolumeMetadata]:
         """The simulation basis of the simulation."""
         return self.config.simulation_basis.get_operator_basis(self.system.cell)
