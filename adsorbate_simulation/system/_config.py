@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import SimpleMetadata, TupleBasis, metadata
+from slate_core import TupleBasis, metadata
 from slate_core import basis as _basis
 from slate_quantum import state
 from slate_quantum.metadata import (
@@ -23,7 +23,13 @@ from slate_quantum.noise import (
     isotropic_kernel_from_operators,
     noise_kernel_from_operators,
 )
-from slate_quantum.operator import OperatorBasis, OperatorList, SuperOperatorBasis
+from slate_quantum.operator import (
+    OperatorBasis,
+    OperatorList,
+    SuperOperatorBasis,
+    position_list_as_diagonal,
+    recast_diagonal_basis,
+)
 
 from adsorbate_simulation.system._potential import (
     HarmonicPotential,
@@ -99,7 +105,7 @@ class IsotropicEnvironment(Environment):
     @abstractmethod
     def get_operators(
         self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[SimpleMetadata, SpacedVolumeMetadata]: ...
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]: ...
     @override
     def get_noise_kernel(
         self, metadata: SpacedVolumeMetadata
@@ -118,13 +124,13 @@ class ClosedEnvironment(IsotropicEnvironment):
     @override
     def get_operators(
         self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[SimpleMetadata, SpacedVolumeMetadata]:
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
         basis = _basis.from_metadata(metadata)
-        return OperatorList(
+        return OperatorList(  # type: ignore basis type
             TupleBasis(
                 (
                     eigenvalue_basis(np.array([])),
-                    _basis.DiagonalBasis((basis, basis.dual_basis())).upcast(),
+                    recast_diagonal_basis(basis, basis),
                 )
             ).upcast(),
             np.array([]),
@@ -160,9 +166,8 @@ class CaldeiraLeggettEnvironment(IsotropicEnvironment):
     @override
     def get_operators(
         self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[SimpleMetadata, SpacedVolumeMetadata]:
-        operators = build.caldeira_leggett_operators(metadata)
-        return operators.with_operator_basis(operators.basis.inner.children[1].inner)
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+        return position_list_as_diagonal(build.caldeira_leggett_operators(metadata))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -186,9 +191,9 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
     @override
     def get_operators(
         self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[SimpleMetadata, SpacedVolumeMetadata]:
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
         operators = build.real_periodic_caldeira_leggett_operators(metadata)
-        return operators.with_operator_basis(operators.basis[1].inner)
+        return position_list_as_diagonal(operators)
 
 
 class InitialState(ABC):
@@ -367,7 +372,7 @@ class SimulationConfig:
         hamiltonian: Operator[
             OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
         ],
-    ) -> NoiseOperatorList[SpacedVolumeMetadata]:
+    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
         return self.environment.get_temperature_corrected_operators(
             hamiltonian, self.temperature
         )
