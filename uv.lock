@@ -45,7 +45,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.14.1,<2.0.0" },
     { name = "slate-core", git = "https://github.com/Matt-Ord/slate.git?rev=581a9d8" },
     { name = "slate-quantum", extras = ["plot"], marker = "extra == 'plot'" },
-    { name = "slate-quantum", extras = ["sse-solver-py"], git = "https://github.com/Matt-Ord/slate_quantum.git?rev=e924a9624afbcbec89c128ec6f8d663514c512e3" },
+    { name = "slate-quantum", extras = ["sse-solver-py"], git = "https://github.com/Matt-Ord/slate_quantum.git?rev=9d28a5a" },
 ]
 provides-extras = ["plot"]
 
@@ -593,7 +593,7 @@ plot = [
 [[package]]
 name = "slate-quantum"
 version = "0.0.1"
-source = { git = "https://github.com/Matt-Ord/slate_quantum.git?rev=e924a9624afbcbec89c128ec6f8d663514c512e3#e924a9624afbcbec89c128ec6f8d663514c512e3" }
+source = { git = "https://github.com/Matt-Ord/slate_quantum.git?rev=9d28a5a#9d28a5a4fcd5837072e704d15cba88ab7c1cb7fc" }
 dependencies = [
     { name = "numpy" },
     { name = "scipy" },
