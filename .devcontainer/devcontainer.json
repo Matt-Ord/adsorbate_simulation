@@ -44,7 +44,7 @@
 				"python.analysis.autoImportCompletions": true,
 				"python.analysis.packageIndexDepths": [
 					{
-						"name": "slate",
+						"name": "slate_core",
 						"depth": 3
 					},
 					{

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.metadata import AxisDirections
+from slate_core.metadata import AxisDirections
 
 from adsorbate_simulation.system._basis import SimulationCell
 

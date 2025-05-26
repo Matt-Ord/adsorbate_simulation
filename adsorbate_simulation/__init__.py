@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from slate import array, basis, explicit_basis, metadata, util
+from slate_core import array, basis, explicit_basis, metadata, util
 
 __all__ = ["array", "basis", "explicit_basis", "metadata", "util"]

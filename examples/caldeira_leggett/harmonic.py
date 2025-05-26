@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
-from slate import basis, plot
-from slate.plot import (
+from slate_core import basis, plot
+from slate_core.plot import (
     animate_data_over_list_1d_k,
     animate_data_over_list_1d_x,
 )
@@ -34,20 +34,19 @@ if __name__ == "__main__":
         IsotropicSimulationConfig(
             simulation_basis=PositionSimulationBasis(
                 shape=(1,),
-                resolution=(100,),
-                offset=((100 - 80) // 2,),
-                truncation=(80,),
+                resolution=(300,),
+                offset=((300 - 200) // 2,),
+                truncation=(200,),
             ),
-            environment=CaldeiraLeggettEnvironment(_eta=3 / (hbar * 2**2)),
+            environment=CaldeiraLeggettEnvironment(_eta=2 / (hbar * 2**2)),
             temperature=10 / Boltzmann,
-            target_delta=1e-3,
+            target_delta=0.2e-3,
             initial_state=HarmonicCoherentInitialState(),
         ),
     )
-
     # We simulate the system using the stochastic Schrodinger equation.
     # We find a localized stochastic evolution of the wavepacket.
-    times = spaced_time_basis(n=100, dt=0.1 * np.pi * hbar)
+    times = spaced_time_basis(n=100, dt=0.01 * np.pi * hbar)
     states = run_stochastic_simulation.call_cached(condition, times)
     states = dynamics.select_realization(states)
 
@@ -57,8 +56,14 @@ if __name__ == "__main__":
     fig.show()
 
     fig, ax, anim0 = animate_data_over_list_1d_x(states, measure="abs")
+    ax.set_title("Stochastic Evolution of the Wavepacket")
+    ax.set_xlabel("Position /m")
+    ax.set_ylabel("Probability Density")
     fig.show()
     fig, ax, anim1 = animate_data_over_list_1d_k(states, measure="abs")
+    ax.set_title("Stochastic Evolution of the Wavepacket in k-space")
+    ax.set_xlabel("Momentum")
+    ax.set_ylabel("Probability Density")
     fig.show()
 
     # Check that the states are normalized - this is an easy way to check that
@@ -75,7 +80,7 @@ if __name__ == "__main__":
 
     plot.wait_for_close()
 
-    basis_list = basis.as_index_basis(basis.as_tuple_basis(states.basis)[0])
+    basis_list = basis.as_index(basis.as_tuple(states.basis).children[0])
     for i in basis_list.points:
         s = states[i.item(), :]
         assert np.isclose(1, normalization.as_array(), atol=1e-2)

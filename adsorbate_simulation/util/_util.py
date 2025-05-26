@@ -6,17 +6,17 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import scipy.signal  # type: ignore stubs
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate import (
+from slate_core import (
     Array,
     BasisMetadata,
     FundamentalBasis,
-    StackedMetadata,
+    TupleMetadata,
     array,
     basis,
     metadata,
 )
-from slate.linalg import into_diagonal_hermitian
-from slate.metadata import (
+from slate_core.linalg import into_diagonal_hermitian
+from slate_core.metadata import (
     AxisDirections,
     ExplicitLabeledMetadata,
     LabelSpacing,
@@ -32,8 +32,8 @@ from adsorbate_simulation.system._potential import HarmonicPotential
 from adsorbate_simulation.util._eta import gamma_from_eta
 
 if TYPE_CHECKING:
-    from slate.metadata import Metadata2D
-    from slate_quantum import StateList
+    from slate_core.array import ArrayWithMetadata
+    from slate_quantum.state import StateListWithMetadata
 
     from adsorbate_simulation.system import (
         SimulationCondition,
@@ -51,8 +51,13 @@ def get_thermal_occupation(
 
 
 def get_eigenvalue_occupation_hermitian[M: BasisMetadata](
-    array: Array[Metadata2D[M, M, Any], np.complexfloating], temperature: float
-) -> Array[ExplicitLabeledMetadata[np.floating], np.floating]:
+    array: ArrayWithMetadata[
+        TupleMetadata[tuple[M, M], None], np.dtype[np.complexfloating]
+    ],
+    temperature: float,
+) -> ArrayWithMetadata[
+    ExplicitLabeledMetadata[np.dtype[np.floating]], np.dtype[np.floating]
+]:
     """Get the occupation of the eigenvalues of a Hermitian operator."""
     diagonal = into_diagonal_hermitian(array)
     energies = np.sort(np.abs(diagonal.raw_data))
@@ -186,7 +191,7 @@ def get_harmonic_width(params: EtaParameters) -> float:
 def get_free_displacements[M: TimeMetadata](
     condition: SimulationCondition[Any, Any],
     times: M,
-) -> Array[M, np.floating]:
+) -> ArrayWithMetadata[M, np.dtype[np.floating]]:
     """Get the displacement of a free particle."""
     rate = get_free_displacement_rate(condition)
     return Array(basis.from_metadata(times), times.values * rate)
@@ -197,17 +202,21 @@ def measure_restored_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> ArrayWithMetadata[M0, np.dtype[np.floating]]:
     """Get the restored position coordinate of a wavepacket."""
     periodic_x = operator.measure.all_periodic_x(states, axis=axis)
 
-    delta_x = metadata.volume.fundamental_stacked_delta_x(states.basis.metadata()[1])
+    delta_x = metadata.volume.fundamental_stacked_delta_x(
+        states.basis.metadata().children[1]
+    )
     factor = 2 * np.pi / np.linalg.norm(delta_x[axis]).item()
 
-    return array.unwrap(periodic_x * factor, axis=1) * (1 / factor)
+    return (
+        array.unwrap((periodic_x * factor).as_type(np.float64), axis=1) * (1 / factor)
+    ).as_type(np.float64)
 
 
 def _calculate_total_offsset_multiplications_real(
@@ -234,10 +243,12 @@ def get_restored_displacements[
     M2: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[Metadata2D[M0, M1, None], StackedMetadata[M2, E]],
+    states: StateListWithMetadata[
+        TupleMetadata[tuple[M0, M1], None], TupleMetadata[tuple[M2, ...], E]
+    ],
     *,
     axis: int,
-) -> Array[Metadata2D[M0, M1, None], np.floating]:
+) -> ArrayWithMetadata[TupleMetadata[tuple[M0, M1], None], np.dtype[np.floating]]:
     """Get the restored displacement of a wavepacket."""
     positions = array.as_fundamental_basis(measure_restored_x(states, axis=axis))
     squared = array.square(positions).as_array()
@@ -282,9 +293,9 @@ def get_restored_scatter[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],
     k: tuple[float, ...],
-) -> Array[M0, np.complexfloating]:
+) -> ArrayWithMetadata[M0, np.dtype[np.complexfloating]]:
     r"""Get the restored scattering operator for a wavepacket.
 
     For a gaussian wavepacket
@@ -303,8 +314,9 @@ def get_restored_isf[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]], k: tuple[float, ...]
-) -> Array[M0, np.complexfloating]:
+    states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],
+    k: tuple[float, ...],
+) -> ArrayWithMetadata[M0, np.dtype[np.complexfloating]]:
     """Get the restored displacement of a wavepacket."""
     scatter = get_restored_scatter(states, k)
 

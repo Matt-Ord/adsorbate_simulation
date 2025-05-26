@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never
 
 from slate_quantum import operator
 
@@ -11,12 +11,13 @@ from adsorbate_simulation.system._potential import (
 
 if TYPE_CHECKING:
     import numpy as np
-    from slate.metadata import (
+    from slate_core import Ctype
+    from slate_core.metadata import (
         AxisDirections,
         SpacedLengthMetadata,
         SpacedVolumeMetadata,
     )
-    from slate_quantum.operator import Operator, Potential
+    from slate_quantum.operator import Operator, OperatorBasis, Potential
 
     from adsorbate_simulation.system._basis import SimulationCell
 
@@ -46,14 +47,19 @@ class System[P: SimulationPotential]:
     def get_potential(
         self,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ]:
         """Get the potential for the simulation."""
         return self.potential.get_potential(self.cell, simulation_basis)
 
     def get_hamiltonian(
         self,
         simulation_basis: SimulationBasis,
-    ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
+    ) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
         """Get the hamiltonian for the simulation."""
         return operator.build_kinetic_hamiltonian(
             self.get_potential(simulation_basis), self.mass

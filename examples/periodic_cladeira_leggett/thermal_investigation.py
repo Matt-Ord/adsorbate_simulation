@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore lib
-from slate import Array, array, plot
+from slate_core import Array, array, plot
 from slate_quantum import operator, state
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
@@ -51,7 +51,9 @@ if __name__ == "__main__":
         condition = condition.with_temperature(temperature)
         states = run_stochastic_simulation(condition, times)
 
-        states = states.with_state_basis(diagonal_hamiltonian.basis.inner[0])
+        states = states.with_state_basis(
+            diagonal_hamiltonian.basis.inner.inner.children[0]
+        )
         average_occupation, std_occupation = state.get_average_occupations(states)
         average_occupation = array.cast_basis(
             average_occupation, target_occupation.basis

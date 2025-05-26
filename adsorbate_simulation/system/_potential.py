@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Never, override
 
 import numpy as np
 from slate_quantum import operator
 
 if TYPE_CHECKING:
-    from slate.metadata import AxisDirections, SpacedLengthMetadata
+    from slate_core import Ctype
+    from slate_core.metadata import AxisDirections, SpacedLengthMetadata
     from slate_quantum.operator import Potential
 
     from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
@@ -23,14 +24,24 @@ class SimulationPotential(ABC):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ]:
         """Get the potential for the repeat cell of the simulation."""
 
     def get_potential(
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ]:
         """Get the potential for the simulation."""
         potential = self.get_repeat_potential(cell, simulation_basis)
         return operator.repeat_potential(potential, simulation_basis.shape)
@@ -53,7 +64,12 @@ class CosPotential(SimulationPotential):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ]:
         return operator.build.cos_potential(
             simulation_basis.get_repeat_metadata(cell),
             self.barrier_height,
@@ -83,7 +99,12 @@ class FCCPotential(SimulationPotential):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ]:
         return operator.build.fcc_potential(
             simulation_basis.get_repeat_metadata(cell),
             self.top_site_energy,
@@ -122,7 +143,9 @@ class HarmonicPotential(SimulationPotential):
         self,
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
-    ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    ) -> Potential[
+        SpacedLengthMetadata, AxisDirections, Ctype[Never], np.dtype[np.complexfloating]
+    ]:
         metadata = simulation_basis.get_repeat_metadata(cell)
         return operator.build.potential_from_function(
             metadata,

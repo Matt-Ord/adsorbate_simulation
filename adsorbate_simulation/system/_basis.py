@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from slate import StackedMetadata, TupleBasis, basis, tuple_basis
-from slate.metadata import (
+from slate_core import Ctype, TupleBasis, TupleMetadata, basis
+from slate_core.basis import AsUpcast
+from slate_core.metadata import (
     AxisDirections,
     LabelSpacing,
     SpacedLengthMetadata,
@@ -15,8 +16,9 @@ from slate_quantum import metadata
 
 if TYPE_CHECKING:
     import numpy as np
-    from slate.basis import Basis
+    from slate_core.basis import Basis
     from slate_quantum.metadata import RepeatedVolumeMetadata
+    from slate_quantum.operator import OperatorBasis
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,7 +62,7 @@ class SimulationBasis(ABC):
 
     def get_repeat_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:
         """Get the metadata for the repeat cell of the simulation."""
-        return StackedMetadata(
+        return TupleMetadata(
             tuple(
                 SpacedLengthMetadata(r, spacing=LabelSpacing(delta=delta))
                 for r, delta in zip(self.resolution, cell.lengths, strict=False)
@@ -70,9 +72,9 @@ class SimulationBasis(ABC):
 
     def get_repeat_basis(
         self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    ) -> Basis[SpacedVolumeMetadata, Ctype[np.complex128]]:
         """Get the basis for the repeat cell of the simulation."""
-        return basis.from_metadata(self.get_repeat_metadata(cell))
+        return basis.from_metadata(self.get_repeat_metadata(cell)).upcast()
 
     def get_fundamental_metadata(self, cell: SimulationCell) -> RepeatedVolumeMetadata:
         """Get the metadata for the fundamental cell of the simulation."""
@@ -82,26 +84,19 @@ class SimulationBasis(ABC):
 
     def get_fundamental_basis(
         self, cell: SimulationCell
-    ) -> TupleBasis[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    ) -> Basis[SpacedVolumeMetadata]:
         """Get the fundamental basis for the simulation."""
-        return basis.from_metadata(self.get_fundamental_metadata(cell))
+        return basis.from_metadata(self.get_fundamental_metadata(cell)).upcast()
 
     def get_operator_basis(
         self, cell: SimulationCell
-    ) -> basis.TupleBasis2D[
-        np.complexfloating,
-        Basis[SpacedVolumeMetadata, np.complex128],
-        Basis[SpacedVolumeMetadata, np.complex128],
-        None,
-    ]:
+    ) -> OperatorBasis[SpacedVolumeMetadata]:
         """Get the basis for the simulation."""
         state_basis = self.get_simulation_basis(cell)
-        return tuple_basis((state_basis, state_basis.dual_basis()))
+        return TupleBasis((state_basis, state_basis.dual_basis())).upcast()
 
     @abstractmethod
-    def get_simulation_basis(
-        self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
         """Get the basis for the simulation."""
 
 
@@ -119,9 +114,7 @@ class FundamentalSimulationBasis(SimulationBasis):
         return type(self)(shape=shape, resolution=self.resolution)
 
     @override
-    def get_simulation_basis(
-        self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
         return self.get_fundamental_basis(cell)
 
 
@@ -147,18 +140,21 @@ class MomentumSimulationBasis(SimulationBasis):
         )
 
     @override
-    def get_simulation_basis(
-        self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
         fundamental = self.get_fundamental_metadata(cell)
         truncation = self.truncation or fundamental.shape
 
-        return tuple_basis(
-            tuple(
-                basis.CroppedBasis(s, basis.TransformedBasis(basis.FundamentalBasis(m)))
-                for s, m in zip(truncation, fundamental.children, strict=False)
+        return AsUpcast(
+            TupleBasis(
+                tuple(
+                    basis.CroppedBasis(
+                        s, basis.TransformedBasis(basis.FundamentalBasis(m))
+                    )
+                    for s, m in zip(truncation, fundamental.children, strict=False)
+                ),
+                fundamental.extra,
             ),
-            fundamental.extra,
+            fundamental,
         )
 
 
@@ -185,20 +181,21 @@ class PositionSimulationBasis(SimulationBasis):
         )
 
     @override
-    def get_simulation_basis(
-        self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, np.complex128]:
+    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
         fundamental = self.get_fundamental_metadata(cell)
         truncation = self.truncation or fundamental.shape
         offset = self.offset or tuple(0 for _ in fundamental.shape)
         children = fundamental.children
 
-        return tuple_basis(
-            tuple(
-                basis.TruncatedBasis(
-                    basis.Truncation(s, 1, o), basis.FundamentalBasis(m)
-                )
-                for s, o, m in zip(truncation, offset, children, strict=False)
+        return AsUpcast(
+            TupleBasis(
+                tuple(
+                    basis.TruncatedBasis(
+                        basis.Truncation(s, 1, o), basis.FundamentalBasis(m)
+                    )
+                    for s, o, m in zip(truncation, offset, children, strict=False)
+                ),
+                fundamental.extra,
             ),
-            fundamental.extra,
+            fundamental,
         )

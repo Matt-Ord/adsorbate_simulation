@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 import numpy as np
-from slate import Array, FundamentalBasis, array
-from slate.metadata import ExplicitLabeledMetadata
+from slate_core import Array, FundamentalBasis, array
+from slate_core.metadata import ExplicitLabeledMetadata
 
-from adsorbate_simulation.fit._fit_method import FitMethod
+from adsorbate_simulation.fit._fit_method import FitData, FitMethod
 from adsorbate_simulation.util import get_thermal_occupation
-
-if TYPE_CHECKING:
-    from slate.metadata import LabeledMetadata
 
 
 @dataclass(frozen=True)
@@ -79,10 +76,10 @@ class TemperatureFitMethod(FitMethod[TemperatureFit, TemperatureFitInfo]):
     @override
     def get_fit_from_data(
         self,
-        data: Array[LabeledMetadata[np.floating], np.floating],
+        data: FitData,
         info: TemperatureFitInfo,
         *,
-        y_error: Array[LabeledMetadata[np.floating], np.floating] | None = None,
+        y_error: FitData | None = None,
     ) -> TemperatureFit:
         data = array.as_index_basis(data)
         energies = data.basis.metadata().values[data.basis.points]
@@ -111,7 +108,7 @@ class TemperatureFitMethod(FitMethod[TemperatureFit, TemperatureFitInfo]):
     @override
     def _fit_param_initial_guess(
         self,
-        data: Array[LabeledMetadata[np.floating], np.floating],
+        data: FitData,
         info: TemperatureFitInfo,
     ) -> tuple[float, ...]:
         return (info.target_temperature,)
