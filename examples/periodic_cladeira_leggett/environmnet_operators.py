@@ -45,10 +45,10 @@ if __name__ == "__main__":
         strict=False,
     ):
         fig, ax, _ = plot.array_against_axes_1d(
-            array.as_diagonal_array(operator) * eigenvalue, measure="real"
+            array.extract_diagonal(operator) * eigenvalue, measure="real"
         )
         _, _, line = plot.array_against_axes_1d(
-            array.as_diagonal_array(operator) * eigenvalue, measure="imag", ax=ax
+            array.extract_diagonal(operator) * eigenvalue, measure="imag", ax=ax
         )
         ax.set_title("Environment Operator")
         fig.show()
