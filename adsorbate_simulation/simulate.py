@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from slate_core import basis
 from slate_core.util import cached
 from slate_quantum.dynamics import (
     simulate_caldeira_leggett_realizations,
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 
 
 def _get_simulation_path[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], Any],
+    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
     times: Basis[M],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
@@ -65,7 +66,15 @@ def run_stochastic_simulation[M: TimeMetadata](
     )
 
 
-@cached(_get_simulation_path)
+def _get_simulation_path_cl[M: TimeMetadata](
+    condition: SimulationCondition[System[Any], CaldeiraLeggettSimulationConfig],
+    times: Basis[M],
+) -> Path:
+    directory = Path(os.path.realpath(sys.argv[0])).parent
+    return directory / "data" / f"{hash(condition)}.{hash(times)}.states"
+
+
+@cached(_get_simulation_path_cl)
 def run_caldeira_leggett_simulation[M: TimeMetadata](
     condition: SimulationCondition[System[Any], CaldeiraLeggettSimulationConfig],
     times: Basis[M],
@@ -84,4 +93,5 @@ def run_caldeira_leggett_simulation[M: TimeMetadata](
         initial_state=condition.get_initial_state(),
         potential=condition.potential,
     )
-    return simulate_caldeira_leggett_realizations(cl_condition, times, n_realizations=1)
+    out = simulate_caldeira_leggett_realizations(cl_condition, times, n_realizations=1)
+    return out.with_basis(basis.from_metadata(out.basis.metadata()).upcast())
