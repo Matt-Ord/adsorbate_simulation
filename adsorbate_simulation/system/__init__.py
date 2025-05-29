@@ -12,6 +12,7 @@ from adsorbate_simulation.system._basis import (
 from adsorbate_simulation.system._condition import SimulationCondition
 from adsorbate_simulation.system._config import (
     CaldeiraLeggettEnvironment,
+    CaldeiraLeggettSimulationConfig,
     ClosedEnvironment,
     CoherentInitialState,
     Environment,
@@ -33,6 +34,7 @@ from adsorbate_simulation.system._system import (
 
 __all__ = [
     "CaldeiraLeggettEnvironment",
+    "CaldeiraLeggettSimulationConfig",
     "ClosedEnvironment",
     "CoherentInitialState",
     "CosPotential",
