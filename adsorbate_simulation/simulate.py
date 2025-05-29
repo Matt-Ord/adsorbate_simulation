@@ -6,10 +6,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from slate_core.util import cached
-from slate_quantum.dynamics import solve_stochastic_schrodinger_equation_banded
+from slate_quantum.dynamics import (
+    simulate_caldeira_leggett_realizations,
+    solve_stochastic_schrodinger_equation_banded,
+)
+from slate_quantum.dynamics.caldeira_leggett import CaldeiraLeggettCondition
 from slate_quantum.metadata import (
     TimeMetadata,
 )
+
+from adsorbate_simulation.util._eta import gamma_from_eta
 
 if TYPE_CHECKING:
     from slate_core import Basis, SimpleMetadata, TupleMetadata
@@ -21,10 +27,11 @@ if TYPE_CHECKING:
         SimulationCondition,
         System,
     )
+    from adsorbate_simulation.system._config import CaldeiraLeggettSimulationConfig
 
 
 def _get_simulation_path[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
+    condition: SimulationCondition[System[Any], Any],
     times: Basis[M],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
@@ -56,3 +63,25 @@ def run_stochastic_simulation[M: TimeMetadata](
         method="Order2ExplicitWeak",
         target_delta=condition.config.target_delta,
     )
+
+
+@cached(_get_simulation_path)
+def run_caldeira_leggett_simulation[M: TimeMetadata](
+    condition: SimulationCondition[System[Any], CaldeiraLeggettSimulationConfig],
+    times: Basis[M],
+) -> StateList[
+    Basis[
+        TupleMetadata[
+            tuple[TupleMetadata[tuple[SimpleMetadata, M], None], SpacedVolumeMetadata]
+        ]
+    ]
+]:
+    """Run a Caldeira-Leggett simulation."""
+    cl_condition = CaldeiraLeggettCondition(
+        mass=condition.mass,
+        temperature=condition.temperature,
+        friction=gamma_from_eta(condition.eta, condition.mass),
+        initial_state=condition.get_initial_state(),
+        potential=condition.potential,
+    )
+    return simulate_caldeira_leggett_realizations(cl_condition, times, n_realizations=1)

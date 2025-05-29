@@ -394,3 +394,10 @@ class SimulationConfig:
 @dataclass(frozen=True, kw_only=True)
 class IsotropicSimulationConfig(SimulationConfig):
     environment: IsotropicEnvironment = field(default_factory=ClosedEnvironment)
+
+
+@dataclass(frozen=True, kw_only=True)
+class CaldeiraLeggettSimulationConfig(SimulationConfig):
+    environment: CaldeiraLeggettEnvironment = field(
+        default_factory=CaldeiraLeggettEnvironment
+    )
