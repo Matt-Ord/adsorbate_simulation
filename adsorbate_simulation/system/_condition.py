@@ -68,7 +68,8 @@ class SimulationCondition[
     def fundamental_metadata(self) -> RepeatedVolumeMetadata:
         return self.config.simulation_basis.get_fundamental_metadata(self.system.cell)
 
-    def get_initial_state(self) -> StateWithMetadata[SpacedVolumeMetadata]:
+    @property
+    def initial_state(self) -> StateWithMetadata[SpacedVolumeMetadata]:
         return self.config.get_initial_state(self.system)
 
     @overload
