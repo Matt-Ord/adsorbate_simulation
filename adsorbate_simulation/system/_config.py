@@ -35,7 +35,7 @@ from adsorbate_simulation.system._potential import (
     HarmonicPotential,
     SimulationPotential,
 )
-from adsorbate_simulation.util._eta import eta_from_gamma
+from adsorbate_simulation.util._eta import eta_from_gamma, gamma_from_eta
 
 if TYPE_CHECKING:
     from slate_core.metadata import SpacedVolumeMetadata
@@ -52,6 +52,11 @@ class Environment(ABC):
     @property
     @abstractmethod
     def eta(self) -> float: ...
+
+    def gamma(self, mass: float) -> float:
+        """Get the friction coefficient."""
+        return gamma_from_eta(self.eta, mass)
+
     @abstractmethod
     def get_operators(
         self, metadata: SpacedVolumeMetadata
