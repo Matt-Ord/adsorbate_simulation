@@ -16,8 +16,6 @@ from slate_quantum.metadata import (
     TimeMetadata,
 )
 
-from adsorbate_simulation.util._eta import gamma_from_eta
-
 if TYPE_CHECKING:
     from slate_core import Basis, SimpleMetadata, TupleMetadata
     from slate_core.metadata import SpacedVolumeMetadata
@@ -51,16 +49,11 @@ def run_stochastic_simulation[M: TimeMetadata](
     ]
 ]:
     """Run a stochastic simulation."""
-    hamiltonian = condition.hamiltonian
-    hamiltonian = hamiltonian.with_basis(condition.operator_basis)
-    environment_operators = condition.temperature_corrected_operators
-    initial_state = condition.get_initial_state()
-
     return solve_stochastic_schrodinger_equation_banded(
-        initial_state,
+        condition.initial_state,
         times,
-        hamiltonian,
-        environment_operators,
+        condition.hamiltonian.with_basis(condition.operator_basis),
+        condition.temperature_corrected_operators,
         method="Order2ExplicitWeak",
         target_delta=condition.config.target_delta,
     )
@@ -89,8 +82,8 @@ def run_caldeira_leggett_simulation[M: TimeMetadata](
     cl_condition = CaldeiraLeggettCondition(
         mass=condition.mass,
         temperature=condition.temperature,
-        friction=gamma_from_eta(condition.eta, condition.mass),
-        initial_state=condition.get_initial_state(),
+        friction=condition.gamma,
+        initial_state=condition.initial_state,
         potential=condition.potential,
     )
     out = simulate_caldeira_leggett_realizations(cl_condition, times, n_realizations=1)
