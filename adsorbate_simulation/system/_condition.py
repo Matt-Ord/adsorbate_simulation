@@ -118,6 +118,11 @@ class SimulationCondition[
         return self.config.environment.eta
 
     @property
+    def gamma(self) -> float:
+        """The friction coefficient of the system."""
+        return self.config.environment.gamma(self.mass)
+
+    @property
     def simulation_basis(self) -> Basis[SpacedVolumeMetadata]:
         return self.config.simulation_basis.get_simulation_basis(self.system.cell)
 
