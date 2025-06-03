@@ -402,7 +402,7 @@ class IsotropicSimulationConfig(SimulationConfig):
 
 
 @dataclass(frozen=True, kw_only=True)
-class CaldeiraLeggettSimulationConfig(SimulationConfig):
+class CaldeiraLeggettSimulationConfig(IsotropicSimulationConfig):
     environment: CaldeiraLeggettEnvironment = field(
         default_factory=CaldeiraLeggettEnvironment
     )
