@@ -29,8 +29,8 @@ if TYPE_CHECKING:
     from adsorbate_simulation.system._config import CaldeiraLeggettSimulationConfig
 
 
-def _get_simulation_path[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
+def _get_simulation_path[M: TimeMetadata, C: IsotropicSimulationConfig](
+    condition: SimulationCondition[System[Any], C],
     times: Basis[M],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
@@ -38,8 +38,8 @@ def _get_simulation_path[M: TimeMetadata](
 
 
 @cached(_get_simulation_path)
-def run_stochastic_simulation[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], IsotropicSimulationConfig],
+def run_stochastic_simulation[M: TimeMetadata, C: IsotropicSimulationConfig](
+    condition: SimulationCondition[System[Any], C],
     times: Basis[M],
 ) -> StateList[
     Basis[
@@ -59,8 +59,8 @@ def run_stochastic_simulation[M: TimeMetadata](
     )
 
 
-def _get_simulation_path_cl[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], CaldeiraLeggettSimulationConfig],
+def _get_simulation_path_cl[M: TimeMetadata, C: CaldeiraLeggettSimulationConfig](
+    condition: SimulationCondition[System[Any], C],
     times: Basis[M],
 ) -> Path:
     directory = Path(os.path.realpath(sys.argv[0])).parent
@@ -68,8 +68,11 @@ def _get_simulation_path_cl[M: TimeMetadata](
 
 
 @cached(_get_simulation_path_cl)
-def run_caldeira_leggett_simulation[M: TimeMetadata](
-    condition: SimulationCondition[System[Any], CaldeiraLeggettSimulationConfig],
+def run_caldeira_leggett_simulation[
+    M: TimeMetadata,
+    C: CaldeiraLeggettSimulationConfig,
+](
+    condition: SimulationCondition[System[Any], C],
     times: Basis[M],
 ) -> StateList[
     Basis[
