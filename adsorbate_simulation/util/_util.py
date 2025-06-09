@@ -18,9 +18,9 @@ from slate_core import (
 from slate_core.linalg import into_diagonal_hermitian
 from slate_core.metadata import (
     AxisDirections,
+    Domain,
+    EvenlySpacedLengthMetadata,
     ExplicitLabeledMetadata,
-    LabelSpacing,
-    SpacedLengthMetadata,
 )
 from slate_quantum import operator
 from slate_quantum.metadata import (
@@ -69,7 +69,7 @@ def get_eigenvalue_occupation_hermitian[M: BasisMetadata](
 
 def spaced_time_basis(*, n: int, dt: float) -> FundamentalBasis[SpacedTimeMetadata]:
     """Get a Time Basis with a given number of steps between each time step."""
-    return FundamentalBasis(SpacedTimeMetadata(n, spacing=LabelSpacing(delta=n * dt)))
+    return FundamentalBasis(SpacedTimeMetadata(n, domain=Domain(delta=n * dt)))
 
 
 def get_free_displacement_rate[M: BasisMetadata, DT: np.floating](
@@ -199,7 +199,7 @@ def get_free_displacements[M: TimeMetadata](
 
 def measure_restored_x[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],
@@ -240,7 +240,7 @@ def _calculate_total_offsset_multiplications_real(
 def get_restored_displacements[
     M0: BasisMetadata,
     M1: BasisMetadata,
-    M2: SpacedLengthMetadata,
+    M2: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateListWithMetadata[
@@ -290,7 +290,7 @@ def _calculate_total_offsset_multiplications_complex(
 
 def get_restored_scatter[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],
@@ -311,7 +311,7 @@ def get_restored_scatter[
 
 def get_restored_isf[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateListWithMetadata[M0, TupleMetadata[tuple[M1, ...], E]],

@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from slate_core import Ctype
     from slate_core.metadata import (
         AxisDirections,
-        SpacedLengthMetadata,
-        SpacedVolumeMetadata,
+        EvenlySpacedLengthMetadata,
+        EvenlySpacedVolumeMetadata,
     )
     from slate_quantum.operator import Operator, OperatorBasis, Potential
 
@@ -48,7 +48,7 @@ class System[P: SimulationPotential]:
         self,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -59,7 +59,9 @@ class System[P: SimulationPotential]:
     def get_hamiltonian(
         self,
         simulation_basis: SimulationBasis,
-    ) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
+    ) -> Operator[
+        OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
+    ]:
         """Get the hamiltonian for the simulation."""
         return operator.build_kinetic_hamiltonian(
             self.get_potential(simulation_basis), self.mass

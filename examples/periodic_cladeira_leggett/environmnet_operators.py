@@ -80,7 +80,7 @@ if __name__ == "__main__":
     fig, ax, _ = plot.array_against_axes_2d_k(operator_flat, measure="abs")
     ax.set_title("Temperature Corrected Environment Operator in Momentum Space")
     fig.show()
-    fig, ax, _ = plot.array_against_axes_2d_x(operator_flat, measure="real")
+    fig, ax, _ = plot.array_against_axes_2d(operator_flat, measure="real")
     ax.set_title("Temperature Corrected Environment Operator in Position Space")
     fig.show()
 

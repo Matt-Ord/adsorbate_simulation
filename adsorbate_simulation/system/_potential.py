@@ -9,7 +9,7 @@ from slate_quantum import operator
 
 if TYPE_CHECKING:
     from slate_core import Ctype
-    from slate_core.metadata import AxisDirections, SpacedLengthMetadata
+    from slate_core.metadata import AxisDirections, EvenlySpacedLengthMetadata
     from slate_quantum.operator import Potential
 
     from adsorbate_simulation.system._basis import SimulationBasis, SimulationCell
@@ -25,7 +25,7 @@ class SimulationPotential(ABC):
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -37,7 +37,7 @@ class SimulationPotential(ABC):
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -65,7 +65,7 @@ class CosPotential(SimulationPotential):
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -100,7 +100,7 @@ class FCCPotential(SimulationPotential):
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -144,7 +144,10 @@ class HarmonicPotential(SimulationPotential):
         cell: SimulationCell,
         simulation_basis: SimulationBasis,
     ) -> Potential[
-        SpacedLengthMetadata, AxisDirections, Ctype[Never], np.dtype[np.complexfloating]
+        EvenlySpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
     ]:
         metadata = simulation_basis.get_repeat_metadata(cell)
         return operator.build.potential_from_function(
