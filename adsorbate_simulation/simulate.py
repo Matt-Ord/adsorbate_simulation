@@ -18,7 +18,7 @@ from slate_quantum.metadata import (
 
 if TYPE_CHECKING:
     from slate_core import Basis, SimpleMetadata, TupleMetadata
-    from slate_core.metadata import SpacedVolumeMetadata
+    from slate_core.metadata import EvenlySpacedVolumeMetadata
     from slate_quantum import StateList
 
     from adsorbate_simulation.system import (
@@ -44,7 +44,10 @@ def run_stochastic_simulation[M: TimeMetadata, C: IsotropicSimulationConfig](
 ) -> StateList[
     Basis[
         TupleMetadata[
-            tuple[TupleMetadata[tuple[SimpleMetadata, M], None], SpacedVolumeMetadata]
+            tuple[
+                TupleMetadata[tuple[SimpleMetadata, M], None],
+                EvenlySpacedVolumeMetadata,
+            ]
         ]
     ]
 ]:
@@ -77,7 +80,10 @@ def run_caldeira_leggett_simulation[
 ) -> StateList[
     Basis[
         TupleMetadata[
-            tuple[TupleMetadata[tuple[SimpleMetadata, M], None], SpacedVolumeMetadata]
+            tuple[
+                TupleMetadata[tuple[SimpleMetadata, M], None],
+                EvenlySpacedVolumeMetadata,
+            ]
         ]
     ]
 ]:

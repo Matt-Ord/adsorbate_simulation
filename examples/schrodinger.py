@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.constants import hbar  # type: ignore libary
 from slate_core import FundamentalBasis, array, plot
-from slate_core.metadata import LabelSpacing
+from slate_core.metadata import Domain
 from slate_core.plot import animate_data_over_list_1d_x
 from slate_quantum import operator
 from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # but the global phase changes
     initial_state = eigenstates[0, :]
     times = FundamentalBasis(
-        SpacedTimeMetadata(60, spacing=LabelSpacing(delta=8 * np.pi * hbar))
+        SpacedTimeMetadata(60, domain=Domain(delta=8 * np.pi * hbar))
     )
     states = solve_schrodinger_equation_decomposition(initial_state, times, hamiltonian)
     fig, _, _anim0 = animate_data_over_list_1d_x(states, measure="real", ax=ax.twinx())

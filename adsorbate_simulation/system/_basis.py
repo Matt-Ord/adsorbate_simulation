@@ -8,9 +8,9 @@ from slate_core import Ctype, TupleBasis, TupleMetadata, basis
 from slate_core.basis import AsUpcast
 from slate_core.metadata import (
     AxisDirections,
-    LabelSpacing,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
+    Domain,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedVolumeMetadata,
 )
 from slate_quantum import metadata
 
@@ -60,11 +60,11 @@ class SimulationBasis(ABC):
     def with_shape(self, shape: tuple[int, ...]) -> SimulationBasis:
         """Create a new basis with a different shape."""
 
-    def get_repeat_metadata(self, cell: SimulationCell) -> SpacedVolumeMetadata:
+    def get_repeat_metadata(self, cell: SimulationCell) -> EvenlySpacedVolumeMetadata:
         """Get the metadata for the repeat cell of the simulation."""
         return TupleMetadata(
             tuple(
-                SpacedLengthMetadata(r, spacing=LabelSpacing(delta=delta))
+                EvenlySpacedLengthMetadata(r, domain=Domain(delta=delta))
                 for r, delta in zip(self.resolution, cell.lengths, strict=False)
             ),
             cell.directions,
@@ -72,7 +72,7 @@ class SimulationBasis(ABC):
 
     def get_repeat_basis(
         self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata, Ctype[np.complex128]]:
+    ) -> Basis[EvenlySpacedVolumeMetadata, Ctype[np.complex128]]:
         """Get the basis for the repeat cell of the simulation."""
         return basis.from_metadata(self.get_repeat_metadata(cell)).upcast()
 
@@ -84,19 +84,21 @@ class SimulationBasis(ABC):
 
     def get_fundamental_basis(
         self, cell: SimulationCell
-    ) -> Basis[SpacedVolumeMetadata]:
+    ) -> Basis[EvenlySpacedVolumeMetadata]:
         """Get the fundamental basis for the simulation."""
         return basis.from_metadata(self.get_fundamental_metadata(cell)).upcast()
 
     def get_operator_basis(
         self, cell: SimulationCell
-    ) -> OperatorBasis[SpacedVolumeMetadata]:
+    ) -> OperatorBasis[EvenlySpacedVolumeMetadata]:
         """Get the basis for the simulation."""
         state_basis = self.get_simulation_basis(cell)
         return TupleBasis((state_basis, state_basis.dual_basis())).upcast()
 
     @abstractmethod
-    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
+    def get_simulation_basis(
+        self, cell: SimulationCell
+    ) -> Basis[EvenlySpacedVolumeMetadata]:
         """Get the basis for the simulation."""
 
 
@@ -114,7 +116,9 @@ class FundamentalSimulationBasis(SimulationBasis):
         return type(self)(shape=shape, resolution=self.resolution)
 
     @override
-    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
+    def get_simulation_basis(
+        self, cell: SimulationCell
+    ) -> Basis[EvenlySpacedVolumeMetadata]:
         return self.get_fundamental_basis(cell)
 
 
@@ -140,7 +144,9 @@ class MomentumSimulationBasis(SimulationBasis):
         )
 
     @override
-    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
+    def get_simulation_basis(
+        self, cell: SimulationCell
+    ) -> Basis[EvenlySpacedVolumeMetadata]:
         fundamental = self.get_fundamental_metadata(cell)
         truncation = self.truncation or fundamental.shape
 
@@ -181,7 +187,9 @@ class PositionSimulationBasis(SimulationBasis):
         )
 
     @override
-    def get_simulation_basis(self, cell: SimulationCell) -> Basis[SpacedVolumeMetadata]:
+    def get_simulation_basis(
+        self, cell: SimulationCell
+    ) -> Basis[EvenlySpacedVolumeMetadata]:
         fundamental = self.get_fundamental_metadata(cell)
         truncation = self.truncation or fundamental.shape
         offset = self.offset or tuple(0 for _ in fundamental.shape)

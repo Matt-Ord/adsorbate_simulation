@@ -38,7 +38,7 @@ from adsorbate_simulation.system._potential import (
 from adsorbate_simulation.util._eta import eta_from_gamma, gamma_from_eta
 
 if TYPE_CHECKING:
-    from slate_core.metadata import SpacedVolumeMetadata
+    from slate_core.metadata import EvenlySpacedVolumeMetadata
     from slate_quantum import Operator
     from slate_quantum.state import StateWithMetadata
 
@@ -59,16 +59,16 @@ class Environment(ABC):
 
     @abstractmethod
     def get_operators(
-        self, metadata: SpacedVolumeMetadata
-    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]: ...
+        self, metadata: EvenlySpacedVolumeMetadata
+    ) -> NoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]: ...
 
     def get_temperature_corrected_operators(
         self,
         hamiltonian: Operator[
-            OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+            OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
         ],
         temperature: float,
-    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+    ) -> NoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]:
         metadata = hamiltonian.basis.metadata().children[0]
         operators = build.temperature_corrected_operators(
             hamiltonian, self.get_operators(metadata), temperature, self.eta
@@ -80,9 +80,11 @@ class Environment(ABC):
     def get_hamiltonian_shift(
         self,
         hamiltonian: Operator[
-            OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+            OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
         ],
-    ) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
+    ) -> Operator[
+        OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
+    ]:
         return build.hamiltonian_shift(
             hamiltonian,
             self.get_operators(hamiltonian.basis.metadata().children[0]),
@@ -90,9 +92,9 @@ class Environment(ABC):
         )
 
     def get_noise_kernel(
-        self, metadata: SpacedVolumeMetadata
+        self, metadata: EvenlySpacedVolumeMetadata
     ) -> NoiseKernel[
-        SuperOperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+        SuperOperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
     ]:
         return noise_kernel_from_operators(self.get_operators(metadata))
 
@@ -109,13 +111,13 @@ class IsotropicEnvironment(Environment):
     @override
     @abstractmethod
     def get_operators(
-        self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]: ...
+        self, metadata: EvenlySpacedVolumeMetadata
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]: ...
     @override
     def get_noise_kernel(
-        self, metadata: SpacedVolumeMetadata
+        self, metadata: EvenlySpacedVolumeMetadata
     ) -> IsotropicNoiseKernelWithMetadata[
-        SpacedVolumeMetadata, np.dtype[np.complexfloating]
+        EvenlySpacedVolumeMetadata, np.dtype[np.complexfloating]
     ]:
         return isotropic_kernel_from_operators(self.get_operators(metadata))
 
@@ -128,8 +130,8 @@ class ClosedEnvironment(IsotropicEnvironment):
 
     @override
     def get_operators(
-        self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+        self, metadata: EvenlySpacedVolumeMetadata
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]:
         basis = _basis.from_metadata(metadata)
         return OperatorList(  # type: ignore basis type
             TupleBasis(
@@ -170,8 +172,8 @@ class CaldeiraLeggettEnvironment(IsotropicEnvironment):
 
     @override
     def get_operators(
-        self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+        self, metadata: EvenlySpacedVolumeMetadata
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]:
         return position_list_as_diagonal(build.caldeira_leggett_operators(metadata))
 
 
@@ -195,8 +197,8 @@ class PeriodicCaldeiraLeggettEnvironment(IsotropicEnvironment):
 
     @override
     def get_operators(
-        self, metadata: SpacedVolumeMetadata
-    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+        self, metadata: EvenlySpacedVolumeMetadata
+    ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]:
         operators = build.real_periodic_caldeira_leggett_operators(metadata)
         return position_list_as_diagonal(operators)
 
@@ -207,7 +209,7 @@ class InitialState(ABC):
     @abstractmethod
     def get_state(
         self, system: System[Any], basis: SimulationBasis
-    ) -> StateWithMetadata[SpacedVolumeMetadata]: ...
+    ) -> StateWithMetadata[EvenlySpacedVolumeMetadata]: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -219,7 +221,7 @@ class CoherentInitialState(InitialState):
     @override
     def get_state[P: SimulationPotential](
         self, system: System[P], basis: SimulationBasis
-    ) -> StateWithMetadata[SpacedVolumeMetadata]:
+    ) -> StateWithMetadata[EvenlySpacedVolumeMetadata]:
         widths = (
             (self.width_factor for _ in system.cell.lengths)
             if isinstance(self.width_factor, int)
@@ -251,7 +253,7 @@ class HarmonicCoherentInitialState(InitialState):
     @override
     def get_state[P: SimulationPotential](
         self, system: System[P], basis: SimulationBasis
-    ) -> StateWithMetadata[SpacedVolumeMetadata]:
+    ) -> StateWithMetadata[EvenlySpacedVolumeMetadata]:
         assert isinstance(system.potential, HarmonicPotential)
         width = self.get_harmonic_width(system.potential.frequency, system.mass)
         sigma_0 = tuple(width for _ in system.cell.lengths)
@@ -375,9 +377,9 @@ class SimulationConfig:
     def get_temperature_corrected_operators(
         self,
         hamiltonian: Operator[
-            OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+            OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
         ],
-    ) -> NoiseOperatorList[EigenvalueMetadata, SpacedVolumeMetadata]:
+    ) -> NoiseOperatorList[EigenvalueMetadata, EvenlySpacedVolumeMetadata]:
         return self.environment.get_temperature_corrected_operators(
             hamiltonian, self.temperature
         )
@@ -385,14 +387,16 @@ class SimulationConfig:
     def get_hamiltonian_shift(
         self,
         hamiltonian: Operator[
-            OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+            OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
         ],
-    ) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
+    ) -> Operator[
+        OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
+    ]:
         return self.environment.get_hamiltonian_shift(hamiltonian)
 
     def get_initial_state(
         self, system: System[Any]
-    ) -> StateWithMetadata[SpacedVolumeMetadata]:
+    ) -> StateWithMetadata[EvenlySpacedVolumeMetadata]:
         return self.initial_state.get_state(system, self.simulation_basis)
 
 
