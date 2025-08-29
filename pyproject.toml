@@ -23,6 +23,7 @@ dev = [
 
 [project.optional-dependencies]
 plot = ["slate_quantum[plot]"]
+qutip = ["slate_quantum[qutip]"]
 
 
 [tool.ruff]

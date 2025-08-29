@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore libary
-from slate_core import basis, plot
+from slate_core import array, basis, plot
 from slate_core.plot import (
     animate_data_over_list_1d_k,
     animate_data_over_list_1d_x,
@@ -13,9 +13,9 @@ from adsorbate_simulation.constants import DIMENSIONLESS_1D_SYSTEM
 from adsorbate_simulation.simulate import run_stochastic_simulation
 from adsorbate_simulation.system import (
     CaldeiraLeggettEnvironment,
+    CaldeiraLeggettSimulationConfig,
     HarmonicCoherentInitialState,
     HarmonicPotential,
-    IsotropicSimulationConfig,
     PositionSimulationBasis,
     SimulationCondition,
 )
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     )
     condition = SimulationCondition(
         system,
-        IsotropicSimulationConfig(
+        CaldeiraLeggettSimulationConfig(
             simulation_basis=PositionSimulationBasis(
                 shape=(1,),
                 resolution=(300,),
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # We simulate the system using the stochastic Schrodinger equation.
     # We find a localized stochastic evolution of the wavepacket.
     times = spaced_time_basis(n=100, dt=0.01 * np.pi * hbar)
-    states = run_stochastic_simulation.call_cached(condition, times)
+    states = run_stochastic_simulation(condition, times)
     states = dynamics.select_realization(states)
 
     # We start the system in a gaussian state, centered at the origin.
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     # Check that the states are normalized - this is an easy way to check that
     # we have a small enough time step.
-    normalization = state.all_inner_product(states, states)
+    normalization = array.extract_diagonal(state.all_inner_product(states, states))
     fig, ax, line = plot.array_against_basis(normalization, measure="real")
     ax.set_title("Normalization of the states against time")
     ax.set_xlabel("Time /s")

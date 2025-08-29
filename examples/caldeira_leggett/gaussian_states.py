@@ -6,12 +6,14 @@ from slate_core import metadata, plot
 from slate_quantum import operator
 
 from adsorbate_simulation.constants.system import DIMENSIONLESS_1D_SYSTEM
-from adsorbate_simulation.simulate import run_stochastic_simulation
+from adsorbate_simulation.simulate import (
+    run_caldeira_leggett_simulation,
+)
 from adsorbate_simulation.system import (
     CaldeiraLeggettEnvironment,
+    CaldeiraLeggettSimulationConfig,
     HarmonicCoherentInitialState,
     HarmonicPotential,
-    IsotropicSimulationConfig,
     PositionSimulationBasis,
     SimulationCondition,
 )
@@ -30,7 +32,7 @@ if __name__ == "__main__":
     )
     condition = SimulationCondition(
         system,
-        IsotropicSimulationConfig(
+        CaldeiraLeggettSimulationConfig(
             simulation_basis=PositionSimulationBasis(
                 shape=(1,),
                 resolution=(300,),
@@ -44,7 +46,7 @@ if __name__ == "__main__":
         ),
     )
     times = spaced_time_basis(n=100, dt=0.01 * np.pi * hbar)
-    states = run_stochastic_simulation(condition, times)
+    states = run_caldeira_leggett_simulation(condition, times)
 
     # Using the e^{ikx} operator, we can calculate the position
     # of the wavepacket.
