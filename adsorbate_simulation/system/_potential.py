@@ -135,7 +135,7 @@ class HarmonicPotential(SimulationPotential):
     ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
         points = tuple((p % d) - d / 2 for p, d in zip(points, lengths, strict=True))
         return (0.5 * self.frequency**2 * np.linalg.norm(points, axis=0) ** 2).astype(
-            np.complexfloating
+            np.complex128
         )
 
     @override
